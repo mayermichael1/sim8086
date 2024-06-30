@@ -125,19 +125,27 @@ void
 print_mov_reg_and_mem ( byte reg, byte rm, bool destination, bool wide, 
                         int displacement)
 {
-  if ( displacement > 0 )
+  if ( displacement != 0 )
     {
+      char sign = '+';
+      if (displacement < 0)
+        {
+          sign = '-';
+          displacement *= -1;
+        }
       if (destination) // register is destination (load)
         {
-          printf ("mov %s, [%s + %i]\n", 
+          printf ("mov %s, [%s %c %u]\n", 
                   get_register_name (reg, wide), 
                   RM_FIELD_NAMES[rm],
+                  sign,
                   displacement);
         }
       else // register is source (store)
         {
-          printf ("mov [%s + %i], %s\n", 
+          printf ("mov [%s %c %u], %s\n", 
                   RM_FIELD_NAMES[rm],
+                  sign,
                   displacement,
                   get_register_name (reg, wide));
         }
