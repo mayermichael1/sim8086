@@ -2,16 +2,17 @@
 #include <unistd.h>
 #include <string.h>
 
-typedef char byte;
-typedef short word; 
+typedef signed char byte;
+typedef signed short word; 
 
 typedef unsigned char ubyte;
 typedef unsigned short uword; 
 
 //  6 bit operations
 static const byte MOV_ADR_TO_ADR = 0b10001000;
-static const byte MOV_MEM_TO_ACCUMULATOR = 0b10100000;
 static const byte MOV_MOD_REG_TO_REG = 0b11;
+static const byte MOV_MEM_TO_ACCUMULATOR = 0b10100000;
+static const byte MOV_ACCUMULATOR_TO_MEM = 0b10100010;
 
 /// 7 bit operations
 //static const byte MOV_TO_ACCUMULATOR = 0b00100010;
@@ -45,7 +46,7 @@ char*
 byte_to_binary_string(byte input)
 {
   char* binary_string = (char*)malloc (sizeof(input)) + 1;
-  byte mask = (byte)(1 << ((sizeof (input) * 8) - 1));
+  ubyte mask = (byte)(1 << ((sizeof (input) * 8) - 1));
   unsigned int i = 0;
 
   for( i = 0 ; i < sizeof (input) * 8; i++)
@@ -63,6 +64,12 @@ byte_to_binary_string(byte input)
   binary_string[i] = 0;
 
   return binary_string;
+}
+
+inline byte 
+mask (byte byte_to_mask, byte mask)
+{
+  return byte_to_mask & mask; 
 }
 
 int 
@@ -95,7 +102,7 @@ main (int argc, char** argv)
       // RM ... Register or Memory
 
       // check operations
-      if ((first_byte & MOV_ADR_TO_ADR) == MOV_ADR_TO_ADR)
+      if (mask(first_byte, 0b11111100) == MOV_ADR_TO_ADR)
         {
           byte second_byte;
           fread(&second_byte, sizeof(byte), 1, fp);
@@ -143,14 +150,12 @@ main (int argc, char** argv)
                   source_string);
             }
         }
-      else if ( (first_byte & MOV_MEM_TO_ACCUMULATOR) 
-                == MOV_MEM_TO_ACCUMULATOR)
+      else if (mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
         {
-          byte w = first_byte & 1;
-
           uword memory;
           fread (&memory, sizeof(memory), 1, fp);
 
+          byte w = first_byte & 1;
           if (w) // wide memory read
             {
               printf("mov AX, [%i]\n", memory);
@@ -158,6 +163,21 @@ main (int argc, char** argv)
           else
             {
               printf("mov AL, [%i]", memory);
+            }
+        }
+      else if (mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
+        {
+          uword memory;
+          fread (&memory, sizeof(memory), 1, fp);
+
+          byte w = first_byte & 1;
+          if (w) // wide memory read
+            {
+              printf("mov [%i], AX\n", memory);
+            }
+          else
+            {
+              printf("mov [%i], AL", memory);
             }
         }
     }
