@@ -6,6 +6,7 @@ This "simulator" does disassemble 8086 machine code.
 Currently supports:
 
 - mov from register to register
+- mov between accumulator and memory
 
 # TODOs
 
