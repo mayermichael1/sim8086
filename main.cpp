@@ -11,6 +11,10 @@ typedef unsigned short uword;
 //  6 bit operations
 static const byte MOV_ADR_TO_ADR = 0b10001000;
 static const byte MOV_MOD_REG_TO_REG = 0b11;
+static const byte MOV_MOD_MEM_MODE = 0b00;
+//static const byte MOV_MOD_MEM_MODE_DISPLACE_1 = 0b01;
+//static const byte MOV_MOD_MEM_MODE_DISPLACE_2 = 0b10;
+
 static const byte MOV_MEM_TO_ACCUMULATOR = 0b10100000;
 static const byte MOV_ACCUMULATOR_TO_MEM = 0b10100010;
 static const byte MOV_IMMEDIATE_TO_REGISTER = 0b10110000;
@@ -41,6 +45,18 @@ static const char* REGISTER_NAMES_WIDE[] =
   "BP",
   "SI",
   "DI"
+};
+
+static const char* RM_FIELD_NAMES[] = 
+{
+  "BX + SI",
+  "BX + DI",
+  "BP + SI",
+  "BP + DI",
+  "SI",
+  "DI",
+  "BP",
+  "BX",
 };
 
 char* 
@@ -114,41 +130,81 @@ main (int argc, char** argv)
           byte mod = mask((second_byte >> 6), 0b00000011);
           byte reg = mask((second_byte >> 3), 0b00000111);
           byte rm =  mask((second_byte >> 0), 0b00000111);
-          ubyte destination = 0;
-          ubyte source = 0;
-
-          char destination_string[3] = "";
-          char source_string[3] = "";
 
           if (mod == MOV_MOD_REG_TO_REG) // register to register move
             {
               // d bit
               if ( d == 1)
                 {
-                  destination = reg;
-                  source = rm;
+                  if ( w == 1)
+                    {
+                      printf ("mov %s, %s\n", 
+                          REGISTER_NAMES_WIDE[reg], 
+                          REGISTER_NAMES_WIDE[rm]);
+                    }
+                  else
+                    {
+                      printf ("mov %s, %s\n", 
+                          REGISTER_NAMES[reg], 
+                          REGISTER_NAMES[rm]);
+                    }
                 }
               else 
                 {
-                  destination = rm;
-                  source = reg;
+                  if ( w == 1)
+                    {
+                      printf ("mov %s, %s\n", 
+                          REGISTER_NAMES_WIDE[rm], 
+                          REGISTER_NAMES_WIDE[reg]);
+                    }
+                  else
+                    {
+                      printf ("mov %s, %s\n", 
+                          REGISTER_NAMES[rm], 
+                          REGISTER_NAMES[reg]);
+                    }
                 }
 
-              // registers
-              if ( w == 1)
-                {
-                  strcpy( destination_string, REGISTER_NAMES_WIDE[destination]);
-                  strcpy( source_string, REGISTER_NAMES_WIDE[source]);
-                }
-              else
-                {
-                  strcpy( destination_string, REGISTER_NAMES[destination]);
-                  strcpy( source_string, REGISTER_NAMES[source]);
-                }
 
-              printf ("mov %s, %s\n", 
-                  destination_string, 
-                  source_string);
+            }
+          else if (mod == MOV_MOD_MEM_MODE)
+            {
+              if (d == 1) // register is destination (load)
+                {
+                  if (w == 1)
+                    {
+                      printf ("mov %s, [%s]\n", 
+                              REGISTER_NAMES_WIDE[reg], 
+                              RM_FIELD_NAMES[rm]);
+                    }
+                  else
+                    {
+                      printf ("mov %s, [%s]\n", 
+                              REGISTER_NAMES[reg], 
+                              RM_FIELD_NAMES[rm]);
+                    }
+                }
+              else // register is source (store)
+                {
+                  if (w == 1)
+                    {
+                      printf ("mov [%s], %s\n", 
+                              RM_FIELD_NAMES[rm], 
+                              REGISTER_NAMES_WIDE[reg]);
+                    }
+                  else
+                    {
+                      printf ("mov [%s], %s\n", 
+                              RM_FIELD_NAMES[rm],
+                              REGISTER_NAMES_WIDE[reg]);
+                    }
+                }
+            }
+          else
+            {
+              printf ("; NOT IMPLEMENTED %s %s\n", 
+                      byte_to_binary_string(first_byte),
+                      byte_to_binary_string(second_byte));
             }
         }
       else if (mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
@@ -200,6 +256,10 @@ main (int argc, char** argv)
               
               printf("mov %s, [%i]\n", REGISTER_NAMES[reg], immediate_value);
             }
+        }
+      else
+        {
+          printf ("; NOT IMPLEMENTED %s\n",byte_to_binary_string(first_byte));
         }
     }
 
