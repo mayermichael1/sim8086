@@ -13,6 +13,7 @@ static const byte MOV_ADR_TO_ADR = 0b10001000;
 static const byte MOV_MOD_REG_TO_REG = 0b11;
 static const byte MOV_MEM_TO_ACCUMULATOR = 0b10100000;
 static const byte MOV_ACCUMULATOR_TO_MEM = 0b10100010;
+static const byte MOV_IMMEDIATE_TO_REGISTER = 0b10110000;
 
 /// 7 bit operations
 //static const byte MOV_TO_ACCUMULATOR = 0b00100010;
@@ -107,12 +108,12 @@ main (int argc, char** argv)
           byte second_byte;
           fread(&second_byte, sizeof(byte), 1, fp);
 
-          byte d =          (first_byte >> 1) & 0b00000001;
-          byte w =          (first_byte >> 0) & 0b00000001;
+          byte d =   mask((first_byte >> 1), 0b00000001);
+          byte w =   mask((first_byte >> 0), 0b00000001);
 
-          byte mod =        (second_byte >> 6) & 0b00000011;
-          byte reg =        (second_byte >> 3) & 0b00000111;
-          byte rm =         (second_byte >> 0) & 0b00000111;
+          byte mod = mask((second_byte >> 6), 0b00000011);
+          byte reg = mask((second_byte >> 3), 0b00000111);
+          byte rm =  mask((second_byte >> 0), 0b00000111);
           ubyte destination = 0;
           ubyte source = 0;
 
@@ -178,6 +179,26 @@ main (int argc, char** argv)
           else
             {
               printf("mov [%i], AL", memory);
+            }
+        }
+      else if (mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
+        {
+          byte w = (first_byte >> 3) & 1;
+          byte reg = mask (first_byte, 0b00000111);
+          
+          if (w == 1)
+            {
+              word immediate_value;
+              fread (&immediate_value, sizeof(immediate_value), 1, fp);
+              
+              printf("mov %s, [%i]\n", REGISTER_NAMES_WIDE[reg], immediate_value);
+            }
+          else
+            {
+              byte immediate_value;
+              fread (&immediate_value, sizeof(immediate_value), 1, fp);
+              
+              printf("mov %s, [%i]\n", REGISTER_NAMES[reg], immediate_value);
             }
         }
     }

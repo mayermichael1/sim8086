@@ -7,11 +7,12 @@ Currently supports:
 
 - mov from register to register
 - mov between accumulator and memory
+- mov immediate to register
 
 # TODOs
 
 - [ ] MOV to and from Memory
-- [ ] MOV immediate to register
+- [x] MOV immediate to register
 - [ ] MOV immediate to memory
 - [x] MOV to and from ax
 - [ ] signed memory displacements
