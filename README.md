@@ -11,7 +11,7 @@ Currently supports:
 
 # TODOs
 
-- [ ] MOV to and from Memory
+- [x] MOV to and from Memory
 - [x] MOV immediate to register
 - [ ] MOV immediate to memory
 - [x] MOV to and from ax

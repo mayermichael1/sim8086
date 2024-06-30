@@ -12,8 +12,8 @@ typedef unsigned short uword;
 static const byte MOV_ADR_TO_ADR = 0b10001000;
 static const byte MOV_MOD_REG_TO_REG = 0b11;
 static const byte MOV_MOD_MEM_MODE = 0b00;
-//static const byte MOV_MOD_MEM_MODE_DISPLACE_1 = 0b01;
-//static const byte MOV_MOD_MEM_MODE_DISPLACE_2 = 0b10;
+static const byte MOV_MOD_MEM_MODE_DISPLACE_1 = 0b01;
+static const byte MOV_MOD_MEM_MODE_DISPLACE_2 = 0b10;
 
 static const byte MOV_MEM_TO_ACCUMULATOR = 0b10100000;
 static const byte MOV_ACCUMULATOR_TO_MEM = 0b10100010;
@@ -25,38 +25,38 @@ static const byte MOV_IMMEDIATE_TO_REGISTER = 0b10110000;
 
 static const char* REGISTER_NAMES[] = 
 {
-  "AL",
-  "CL",
-  "DL",
-  "BL",
-  "AH",
-  "CH",
-  "DH",
-  "BH"
+  "al",
+  "cl",
+  "dl",
+  "bl",
+  "ah",
+  "ch",
+  "dh",
+  "bh"
 };
 
 static const char* REGISTER_NAMES_WIDE[] = 
 {
-  "AX",
-  "CX",
-  "DX",
-  "BX",
-  "SP",
-  "BP",
-  "SI",
-  "DI"
+  "ax",
+  "cx",
+  "dx",
+  "bx",
+  "sp",
+  "bp",
+  "si",
+  "di"
 };
 
 static const char* RM_FIELD_NAMES[] = 
 {
-  "BX + SI",
-  "BX + DI",
-  "BP + SI",
-  "BP + DI",
-  "SI",
-  "DI",
-  "BP",
-  "BX",
+  "bx + si",
+  "bx + di",
+  "bp + si",
+  "bp + di",
+  "si",
+  "di",
+  "bp",
+  "bx",
 };
 
 char* 
@@ -89,6 +89,76 @@ mask (byte byte_to_mask, byte mask)
   return byte_to_mask & mask; 
 }
 
+inline const char*
+get_register_name (byte reg, bool wide)
+{
+  if (wide)
+    {
+      return REGISTER_NAMES_WIDE[reg];
+    }
+
+  return REGISTER_NAMES[reg];
+}
+
+void 
+print_mov_register_to_register (byte reg, byte rm, bool destination, bool wide)
+{ 
+  byte destination_register;
+  byte source_register;
+  if ( destination)
+    {
+      destination_register = reg;
+      source_register = rm;
+    }
+  else
+    {
+      destination_register = rm;
+      source_register = reg;
+    }
+
+  printf ("mov %s, %s\n", 
+      get_register_name (destination_register, wide), 
+      get_register_name (source_register, wide));
+}
+
+void 
+print_mov_reg_and_mem ( byte reg, byte rm, bool destination, bool wide, 
+                        int displacement)
+{
+  if ( displacement > 0 )
+    {
+      if (destination) // register is destination (load)
+        {
+          printf ("mov %s, [%s + %i]\n", 
+                  get_register_name (reg, wide), 
+                  RM_FIELD_NAMES[rm],
+                  displacement);
+        }
+      else // register is source (store)
+        {
+          printf ("mov [%s + %i], %s\n", 
+                  RM_FIELD_NAMES[rm],
+                  displacement,
+                  get_register_name (reg, wide));
+        }
+    }
+  else
+    {
+      if (destination) // register is destination (load)
+        {
+          printf ("mov %s, [%s]\n", 
+                  get_register_name (reg, wide), 
+                  RM_FIELD_NAMES[rm]);
+        }
+      else // register is source (store)
+        {
+          printf ("mov [%s], %s\n", 
+                  RM_FIELD_NAMES[rm],
+                  get_register_name (reg, wide));
+        }
+    }
+}
+
 int 
 main (int argc, char** argv)
 {
@@ -104,6 +174,8 @@ main (int argc, char** argv)
     {
       return 1;
     }
+
+  printf("bits 16\n"); // compatibility with source
 
   byte first_byte;
   while (fread (&first_byte, sizeof(byte), 1, fp)) 
@@ -133,72 +205,23 @@ main (int argc, char** argv)
 
           if (mod == MOV_MOD_REG_TO_REG) // register to register move
             {
-              // d bit
-              if ( d == 1)
-                {
-                  if ( w == 1)
-                    {
-                      printf ("mov %s, %s\n", 
-                          REGISTER_NAMES_WIDE[reg], 
-                          REGISTER_NAMES_WIDE[rm]);
-                    }
-                  else
-                    {
-                      printf ("mov %s, %s\n", 
-                          REGISTER_NAMES[reg], 
-                          REGISTER_NAMES[rm]);
-                    }
-                }
-              else 
-                {
-                  if ( w == 1)
-                    {
-                      printf ("mov %s, %s\n", 
-                          REGISTER_NAMES_WIDE[rm], 
-                          REGISTER_NAMES_WIDE[reg]);
-                    }
-                  else
-                    {
-                      printf ("mov %s, %s\n", 
-                          REGISTER_NAMES[rm], 
-                          REGISTER_NAMES[reg]);
-                    }
-                }
-
-
+              print_mov_register_to_register (reg, rm, d, w);
             }
           else if (mod == MOV_MOD_MEM_MODE)
             {
-              if (d == 1) // register is destination (load)
-                {
-                  if (w == 1)
-                    {
-                      printf ("mov %s, [%s]\n", 
-                              REGISTER_NAMES_WIDE[reg], 
-                              RM_FIELD_NAMES[rm]);
-                    }
-                  else
-                    {
-                      printf ("mov %s, [%s]\n", 
-                              REGISTER_NAMES[reg], 
-                              RM_FIELD_NAMES[rm]);
-                    }
-                }
-              else // register is source (store)
-                {
-                  if (w == 1)
-                    {
-                      printf ("mov [%s], %s\n", 
-                              RM_FIELD_NAMES[rm], 
-                              REGISTER_NAMES_WIDE[reg]);
-                    }
-                  else
-                    {
-                      printf ("mov [%s], %s\n", 
-                              RM_FIELD_NAMES[rm],
-                              REGISTER_NAMES_WIDE[reg]);
-                    }
-                }
+              print_mov_reg_and_mem(reg, rm, d, w, 0);
+            }
+          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
+            {
+              byte displacement;
+              fread (&displacement, sizeof(displacement), 1, fp);
+              print_mov_reg_and_mem(reg, rm, d, w, displacement);
+            }
+          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
+            {
+              word displacement;
+              fread (&displacement, sizeof(displacement), 1, fp);
+              print_mov_reg_and_mem(reg, rm, d, w, displacement);
             }
           else
             {
@@ -213,14 +236,7 @@ main (int argc, char** argv)
           fread (&memory, sizeof(memory), 1, fp);
 
           byte w = first_byte & 1;
-          if (w) // wide memory read
-            {
-              printf("mov AX, [%i]\n", memory);
-            }
-          else
-            {
-              printf("mov AL, [%i]", memory);
-            }
+          printf("mov %s, [%i]\n", get_register_name(0, w), memory);
         }
       else if (mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
@@ -228,34 +244,23 @@ main (int argc, char** argv)
           fread (&memory, sizeof(memory), 1, fp);
 
           byte w = first_byte & 1;
-          if (w) // wide memory read
-            {
-              printf("mov [%i], AX\n", memory);
-            }
-          else
-            {
-              printf("mov [%i], AL", memory);
-            }
+          printf("mov [%i], %s\n", memory, get_register_name(0, w));
         }
       else if (mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
         {
           byte w = (first_byte >> 3) & 1;
           byte reg = mask (first_byte, 0b00000111);
           
+          int immediate_value = 0;;
           if (w == 1)
             {
-              word immediate_value;
-              fread (&immediate_value, sizeof(immediate_value), 1, fp);
-              
-              printf("mov %s, [%i]\n", REGISTER_NAMES_WIDE[reg], immediate_value);
+              fread (&immediate_value, sizeof(word), 1, fp);
             }
           else
             {
-              byte immediate_value;
-              fread (&immediate_value, sizeof(immediate_value), 1, fp);
-              
-              printf("mov %s, [%i]\n", REGISTER_NAMES[reg], immediate_value);
+              fread (&immediate_value, sizeof(byte), 1, fp);
             }
+          printf("mov %s, %i\n", get_register_name(reg, w), immediate_value);
         }
       else
         {
