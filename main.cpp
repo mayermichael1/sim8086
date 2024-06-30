@@ -18,6 +18,18 @@ static const char* REGISTER_NAMES[] =
   "BH"
 };
 
+static const char* REGISTER_NAMES_WIDE[] = 
+{
+  "AX",
+  "CX",
+  "DX",
+  "BX",
+  "SP",
+  "BP",
+  "SI",
+  "DI"
+};
+
 char* 
 byte_to_binary_string(byte input)
 {
@@ -71,27 +83,54 @@ main (int argc, char** argv)
       // REG ... REGISTER
       // RM ... Register or Memory
 
-      printf ("mc: %s %s ", 
-        byte_to_binary_string(next_instruction[0]), 
-        byte_to_binary_string(next_instruction[1]));
-
-      byte operation = (next_instruction[0] >> 2) & 0b00111111;
-      byte reg = (next_instruction[1] >> 3) & 0b00000111;
-      byte rm = (next_instruction[1]) & 0b00000111;
+      byte operation =  (next_instruction[0] >> 2) & 0b00111111;
+      byte d =          (next_instruction[0] >> 1) & 0b00000001;
+      byte w =          (next_instruction[0] >> 0) & 0b00000001;
+      byte mod =        (next_instruction[1] >> 6) & 0b00000011;
+      byte reg =        (next_instruction[1] >> 3) & 0b00000111;
+      byte rm =         (next_instruction[1] >> 0) & 0b00000111;
+      byte destination = 0;
+      byte source = 0;
 
       char operation_string[4] =  "";
+      char destination_string[3] = "";
+      char source_string[3] = "";
 
+      // operation
       if (operation == MOV_OPERATION)
         {
           strcpy (operation_string, "mov");
+          if ( mod != 0b11) 
+            {
+              continue; // skip for now because operation is not reg to reg
+            }
         }
 
-      char register1_string[3] = "";
-      strcpy( register1_string, REGISTER_NAMES[reg]);
-      char register2_string[3] = "";
-      strcpy( register2_string, REGISTER_NAMES[rm]);
+      // d bit
+      if ( d == 1)
+        {
+          destination = reg;
+          source = rm;
+        }
+      else 
+        {
+          destination = rm;
+          source = reg;
+        }
 
-      printf (" to op: %s %s, %s\n", operation_string, register1_string, register2_string);
+      // registers
+      if ( w == 1)
+        {
+          strcpy( destination_string, REGISTER_NAMES_WIDE[destination]);
+          strcpy( source_string, REGISTER_NAMES_WIDE[source]);
+        }
+      else
+        {
+          strcpy( destination_string, REGISTER_NAMES[destination]);
+          strcpy( source_string, REGISTER_NAMES[source]);
+        }
+
+      printf ("%s %s, %s\n", operation_string, destination_string, source_string);
 
     }
 
