@@ -12,5 +12,5 @@ Currently supports:
 - [ ] MOV to and from Memory
 - [ ] MOV immediate to register
 - [ ] MOV immediate to memory
-- [ ] MOV to and from ax
+- [x] MOV to and from ax
 - [ ] signed memory displacements
