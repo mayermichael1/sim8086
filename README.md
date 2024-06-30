@@ -1,4 +1,4 @@
-# SIM806
+# SIM8086
 
 Does not simulate actual CPU work.
 This "simulator" does disassemble 8086 machine code.
