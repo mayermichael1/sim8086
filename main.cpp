@@ -2,10 +2,20 @@
 #include <unistd.h>
 #include <string.h>
 
-typedef char unsigned byte;
+typedef char byte;
+typedef short word; 
 
-static const byte MOV_OPERATION = 0b00100010;
-//static const byte W_MASK = 0b00000001;
+typedef unsigned char ubyte;
+typedef unsigned short uword; 
+
+//  6 bit operations
+static const byte MOV_ADR_TO_ADR = 0b10001000;
+static const byte MOV_MOD_REG_TO_REG = 0b11;
+
+/// 7 bit operations
+//static const byte MOV_TO_ACCUMULATOR = 0b00100010;
+//static const byte MOV_FROM_ACCUMULATOR = 0b00100010;
+
 static const char* REGISTER_NAMES[] = 
 {
   "AL",
@@ -70,8 +80,8 @@ main (int argc, char** argv)
       return 1;
     }
 
-  byte next_instruction[2];
-  while (fread(next_instruction, sizeof(byte), sizeof(next_instruction), fp)) 
+  byte instruction_buffer[6] = {};
+  while (fread (&instruction_buffer[0], sizeof(byte), 1, fp)) 
     {
       // instruction line layout:
       // OPER  DW   MOREGRM 
@@ -83,58 +93,61 @@ main (int argc, char** argv)
       // REG ... REGISTER
       // RM ... Register or Memory
 
-      byte operation =  (next_instruction[0] >> 2) & 0b00111111;
-      byte d =          (next_instruction[0] >> 1) & 0b00000001;
-      byte w =          (next_instruction[0] >> 0) & 0b00000001;
-      byte mod =        (next_instruction[1] >> 6) & 0b00000011;
-      byte reg =        (next_instruction[1] >> 3) & 0b00000111;
-      byte rm =         (next_instruction[1] >> 0) & 0b00000111;
-      byte destination = 0;
-      byte source = 0;
-
-      char operation_string[4] =  "";
-      char destination_string[3] = "";
-      char source_string[3] = "";
-
-      // operation
-      if (operation == MOV_OPERATION)
+      // check operations
+      if ((instruction_buffer[0] & MOV_ADR_TO_ADR) == MOV_ADR_TO_ADR)
         {
+          fread(&instruction_buffer[1], sizeof(byte), 1, fp);
+
+          byte d =          (instruction_buffer[0] >> 1) & 0b00000001;
+          byte w =          (instruction_buffer[0] >> 0) & 0b00000001;
+
+          byte mod =        (instruction_buffer[1] >> 6) & 0b00000011;
+          byte reg =        (instruction_buffer[1] >> 3) & 0b00000111;
+          byte rm =         (instruction_buffer[1] >> 0) & 0b00000111;
+          ubyte destination = 0;
+          ubyte source = 0;
+
+          char operation_string[4] =  "";
+          char destination_string[3] = "";
+          char source_string[3] = "";
+
           strcpy (operation_string, "mov");
-          if ( mod != 0b11) 
+          if ( mod == MOV_MOD_REG_TO_REG)  // register to register
             {
-              continue; // skip for now because operation is not reg to reg
+              // d bit
+              if ( d == 1)
+                {
+                  destination = reg;
+                  source = rm;
+                }
+              else 
+                {
+                  destination = rm;
+                  source = reg;
+                }
+
+              // registers
+              if ( w == 1)
+                {
+                  strcpy( destination_string, REGISTER_NAMES_WIDE[destination]);
+                  strcpy( source_string, REGISTER_NAMES_WIDE[source]);
+                }
+              else
+                {
+                  strcpy( destination_string, REGISTER_NAMES[destination]);
+                  strcpy( source_string, REGISTER_NAMES[source]);
+                }
+
+              printf ("%s %s, %s\n", 
+                  operation_string, 
+                  destination_string, 
+                  source_string);
             }
         }
-
-      // d bit
-      if ( d == 1)
-        {
-          destination = reg;
-          source = rm;
-        }
-      else 
-        {
-          destination = rm;
-          source = reg;
-        }
-
-      // registers
-      if ( w == 1)
-        {
-          strcpy( destination_string, REGISTER_NAMES_WIDE[destination]);
-          strcpy( source_string, REGISTER_NAMES_WIDE[source]);
-        }
-      else
-        {
-          strcpy( destination_string, REGISTER_NAMES[destination]);
-          strcpy( source_string, REGISTER_NAMES[source]);
-        }
-
-      printf ("%s %s, %s\n", operation_string, destination_string, source_string);
-
     }
 
   fclose (fp);
 
   return 0;
 }
+
