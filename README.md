@@ -9,6 +9,7 @@ Currently supports:
 - mov between accumulator and memory
 - mov immediate to register
 - mov from register to memory or memory to register
+- mov from and to direct address
 
 # TODOs
 

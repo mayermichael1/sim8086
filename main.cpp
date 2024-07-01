@@ -133,6 +133,7 @@ print_mov_reg_and_mem ( byte reg, byte rm, bool destination, bool wide,
           sign = '-';
           displacement *= -1;
         }
+
       if (destination) // register is destination (load)
         {
           printf ("mov %s, [%s %c %u]\n", 
@@ -217,7 +218,27 @@ main (int argc, char** argv)
             }
           else if (mod == MOV_MOD_MEM_MODE)
             {
-              print_mov_reg_and_mem(reg, rm, d, w, 0);
+              if (rm == 0b110) // special case direct address
+                {
+                  word displacement = 0;
+                  fread (&displacement, sizeof(displacement), 1, fp);
+                  if (d == 1) 
+                    {
+                      printf ("mov %s, [%u]\n", 
+                              get_register_name (reg, w), 
+                              displacement);
+                    }
+                  else
+                    {
+                      printf ("mov [%u], [%s]\n", 
+                              displacement,
+                              get_register_name (reg, w)); 
+                    }
+                }
+              else
+                {
+                  print_mov_reg_and_mem(reg, rm, d, w, 0);
+                }
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
             {
