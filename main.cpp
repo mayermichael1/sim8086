@@ -18,6 +18,7 @@ static const byte MOV_MOD_MEM_MODE_DISPLACE_2 = 0b10;
 static const byte MOV_MEM_TO_ACCUMULATOR = 0b10100000;
 static const byte MOV_ACCUMULATOR_TO_MEM = 0b10100010;
 static const byte MOV_IMMEDIATE_TO_REGISTER = 0b10110000;
+static const byte MOV_IMMEDIATE_TO_MEM_OR_REG = 0b11000110;
 
 /// 7 bit operations
 //static const byte MOV_TO_ACCUMULATOR = 0b00100010;
@@ -290,6 +291,119 @@ main (int argc, char** argv)
               fread (&immediate_value, sizeof(byte), 1, fp);
             }
           printf("mov %s, %i\n", get_register_name(reg, w), immediate_value);
+        }
+      else if (mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
+        {
+          byte w = first_byte & 1;
+
+          byte second_byte;
+          fread (&second_byte, sizeof(second_byte), 1, fp);
+
+          byte mod = mask ((second_byte >> 6), 0b00000011);
+          byte rm = mask (second_byte, 0b00000111);
+
+          if (mod == MOV_MOD_REG_TO_REG) // register to register move
+            {
+              printf("; THIS SHOULD NEVER HAPPEN");
+              if (w)
+                {
+                  byte data;
+                  fread( &data, sizeof(data), 1, fp);
+                  printf("mov %s, byte %i\n", get_register_name(rm, w), data);
+                }
+              else
+                {
+                  word data;
+                  fread( &data, sizeof(data), 1, fp);
+                  printf("mov %s, word %i\n", get_register_name(rm, w), data);
+                }
+            }
+          else if (mod == MOV_MOD_MEM_MODE)
+            {
+              if (w)
+                {
+                  word data;
+                  fread( &data, sizeof(data), 1, fp);
+                  printf("mov [%s], word %i\n", RM_FIELD_NAMES[rm], data);
+                }
+              else
+                {
+                  byte data;
+                  fread( &data, sizeof(data), 1, fp);
+                  printf("mov [%s], byte %i\n", RM_FIELD_NAMES[rm], data);
+                }
+            }
+          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
+            {
+              byte displacement;
+              fread( &displacement, sizeof(displacement), 1, fp);
+              char sign = '+';
+              if (displacement < 0)
+                {
+                  sign = '-';
+                  displacement *= -1;
+                }
+              
+              if (w)
+                {
+                  word data;
+                  fread( &data, sizeof(data), 1, fp);
+                  printf( "mov [%s %c %u], word %i\n", 
+                          RM_FIELD_NAMES[rm], 
+                          sign,
+                          displacement,
+                          data);
+                }
+              else
+                {
+                  byte data;
+                  fread( &data, sizeof(data), 1, fp);
+                  printf( "mov [%s %c %u], byte %i\n", 
+                          RM_FIELD_NAMES[rm], 
+                          sign,
+                          displacement,
+                          data);
+                }
+            }
+          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
+            {
+              word displacement;
+              fread( &displacement, sizeof(displacement), 1, fp);
+              char sign = '+';
+              if (displacement < 0)
+                {
+                  sign = '-';
+                  displacement *= -1;
+                }
+              
+              if (w)
+                {
+                  word data;
+                  fread( &data, sizeof(data), 1, fp);
+                  printf( "mov [%s %c %u], word %i\n", 
+                          RM_FIELD_NAMES[rm], 
+                          sign,
+                          displacement,
+                          data);
+                }
+              else
+                {
+                  byte data;
+                  fread( &data, sizeof(data), 1, fp);
+                  printf( "mov [%s %c %u], byte %i\n", 
+                          RM_FIELD_NAMES[rm], 
+                          sign,
+                          displacement,
+                          data);
+                }
+            }
+          else
+            {
+              printf ("; NOT IMPLEMENTED %s %s\n", 
+                      byte_to_binary_string(first_byte),
+                      byte_to_binary_string(second_byte));
+            }
+
         }
       else
         {

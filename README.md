@@ -10,6 +10,7 @@ Currently supports:
 - mov immediate to register
 - mov from register to memory or memory to register
 - mov from and to direct address
+- mov immediate to memory
 
 # TODOs
 
@@ -17,4 +18,4 @@ Currently supports:
 - [x] MOV immediate to register
 - [x] MOV to and from ax
 - [x] signed memory displacements
-- [ ] MOV immediate to memory
+- [x] MOV immediate to memory
