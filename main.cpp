@@ -3,136 +3,124 @@
 #include <string.h>
 #include "types.h"
 #include "binary.h"
+#include "register.h"
 
-static const char* REGISTER_NAMES[] = 
+enum operand_type
 {
-  "al",
-  "cl",
-  "dl",
-  "bl",
-  "ah",
-  "ch",
-  "dh",
-  "bh"
+  OP_IMMEDIATE,
+  OP_REGISTER,
+  OP_MEMORY_LOCATION,
 };
 
-static const char* REGISTER_NAMES_WIDE[] = 
+struct operand
 {
-  "ax",
-  "cx",
-  "dx",
-  "bx",
-  "sp",
-  "bp",
-  "si",
-  "di"
+  operand_type type;
+  bool wide;
+  word value;
+  byte reg;
+  byte rm;
+  word displacement;
 };
-
-static const char* RM_FIELD_NAMES[] = 
-{
-  "bx + si",
-  "bx + di",
-  "bp + si",
-  "bp + di",
-  "si",
-  "di",
-  "bp",
-  "bx",
-};
-
-static const byte MOV_ADR_TO_ADR = 0b10001000;
-static const byte MOV_MOD_REG_TO_REG = 0b11;
-static const byte MOV_MOD_MEM_MODE = 0b00;
-static const byte MOV_MOD_MEM_MODE_DISPLACE_1 = 0b01;
-static const byte MOV_MOD_MEM_MODE_DISPLACE_2 = 0b10;
-
-static const byte MOV_MEM_TO_ACCUMULATOR = 0b10100000;
-static const byte MOV_ACCUMULATOR_TO_MEM = 0b10100010;
-static const byte MOV_IMMEDIATE_TO_REGISTER = 0b10110000;
-static const byte MOV_IMMEDIATE_TO_MEM_OR_REG = 0b11000110;
-
-inline const char*
-get_register_name (byte reg, bool wide)
-{
-  if (wide)
-    {
-      return REGISTER_NAMES_WIDE[reg];
-    }
-
-  return REGISTER_NAMES[reg];
-}
 
 void 
-print_mov_register_to_register (byte reg, byte rm, bool destination, bool wide)
-{ 
-  byte destination_register;
-  byte source_register;
-  if ( destination)
-    {
-      destination_register = reg;
-      source_register = rm;
-    }
-  else
-    {
-      destination_register = rm;
-      source_register = reg;
-    }
-
-  printf ("mov %s, %s\n", 
-      get_register_name (destination_register, wide), 
-      get_register_name (source_register, wide));
-}
-
-void 
-print_mov_reg_and_mem ( byte reg, byte rm, bool destination, bool wide, 
-                        int displacement)
+print_mov (operand destination, operand source)
 {
-  if ( displacement != 0 )
+
+  if (destination.type == OP_IMMEDIATE)
+    {
+      printf(";operation not permitted");
+      return;
+    }
+
+  printf("mov ");
+
+  if (destination.type == OP_REGISTER)
+    {
+      const char* destination_string = get_register_name(
+                            destination.reg, 
+                            destination.wide); 
+      printf("%s", destination_string);
+    }
+  else if (destination.type == OP_MEMORY_LOCATION)
     {
       char sign = '+';
-      if (displacement < 0)
+      printf ("[ %s", RM_FIELD_NAMES[destination.rm]);
+      int displacement = destination.displacement;
+      if (displacement != 0)
         {
-          sign = '-';
-          displacement *= -1;
+          if (displacement < 0)
+            {
+              displacement *= -1;
+              sign = '-';
+            }
+          printf("%c %u", sign, displacement);
         }
+      printf("]");
+    }
 
-      if (destination) // register is destination (load)
-        {
-          printf ("mov %s, [%s %c %u]\n", 
-                  get_register_name (reg, wide), 
-                  RM_FIELD_NAMES[rm],
-                  sign,
-                  displacement);
-        }
-      else // register is source (store)
-        {
-          printf ("mov [%s %c %u], %s\n", 
-                  RM_FIELD_NAMES[rm],
-                  sign,
-                  displacement,
-                  get_register_name (reg, wide));
-        }
-    }
-  else
+  printf(", ");
+
+  if (destination.type == OP_MEMORY_LOCATION && source.type == OP_IMMEDIATE)
     {
-      if (destination) // register is destination (load)
+      if (source.value)
         {
-          printf ("mov %s, [%s]\n", 
-                  get_register_name (reg, wide), 
-                  RM_FIELD_NAMES[rm]);
+          printf("word");
         }
-      else // register is source (store)
+      else
         {
-          printf ("mov [%s], %s\n", 
-                  RM_FIELD_NAMES[rm],
-                  get_register_name (reg, wide));
+          printf("byte");
         }
     }
+
+  if (source.type == OP_REGISTER)
+    {
+      const char* source_string = get_register_name(
+                            source.reg, 
+                            source.wide); 
+      printf("%s", source_string);
+    }
+  else if (source.type == OP_MEMORY_LOCATION)
+    {
+      char sign = '+';
+      printf ("[ %s", RM_FIELD_NAMES[source.rm]);
+      int displacement = source.displacement;
+      if (displacement != 0)
+        {
+          if (displacement < 0)
+            {
+              displacement *= -1;
+              sign = '-';
+            }
+          printf("%c %u", sign, displacement);
+        }
+      printf("]");
+    }
+  else if (source.type == OP_IMMEDIATE)
+    {
+      printf("%i", source.value);
+    }
+
+  printf("\n");
 }
 
 int 
 main (int argc, char** argv)
 {
+  printf("%i %s\n", argc, argv[0]);
+
+  operand dst;
+  operand src;
+
+  dst.type = OP_REGISTER;
+  dst.reg = 001;
+  dst.wide = true;
+
+  src.type = OP_IMMEDIATE;
+  src.value = 1;
+  src.wide = true;
+  print_mov(dst, src);
+
+  /*
   if (argc != 2)
     {
       return 1;
@@ -374,6 +362,7 @@ main (int argc, char** argv)
 
   fclose (fp);
 
+  */
   return 0;
 }
 

@@ -9,6 +9,7 @@ CPPFLAGS :=  -Iinclude/
 OBJECTS := $(BUILD_DIR)/main.o
 # add objects here like this:
 OBJECTS += $(BUILD_DIR)/binary.o
+OBJECTS += $(BUILD_DIR)/register.o
 
 CXXFLAGS += -O0 -g
 #CXXFLAGS += -O2
@@ -20,8 +21,11 @@ $(BUILD_DIR)/sim8086: $(OBJECTS)
 $(BUILD_DIR)/main.o: main.cpp include/types.h include/binary.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c main.cpp -o $(BUILD_DIR)/main.o 
 
-$(BUILD_DIR)/binary.o: src/binary.cpp include/types.h
+$(BUILD_DIR)/binary.o: src/binary.cpp include/types.h include/binary.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/binary.cpp -o $(BUILD_DIR)/binary.o
+
+$(BUILD_DIR)/register.o: src/register.cpp include/register.h include/types.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/register.cpp -o $(BUILD_DIR)/register.o
 
 .PHONY: clean
 clean: 
