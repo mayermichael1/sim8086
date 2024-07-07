@@ -1,5 +1,5 @@
 #  use alias bake to generate compile_commands.json
-CXX := clang++
+CXX := g++
 CXXFLAGS := -Wall -Wextra -Werror
 BUILD_DIR := ./build
 LDFLAGS :=
@@ -17,7 +17,7 @@ $(BUILD_DIR)/sim8086: $(OBJECTS)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(OBJECTS) -o $(BUILD_DIR)/sim8086 $(LDFLAGS) $(LDLIBS)
 
 # program entry point
-$(BUILD_DIR)/main.o: main.cpp #all file includes here
+$(BUILD_DIR)/main.o: main.cpp include/types.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c main.cpp -o $(BUILD_DIR)/main.o
 
 # Build all Objects here
