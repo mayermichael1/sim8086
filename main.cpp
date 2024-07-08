@@ -243,13 +243,27 @@ main (int argc, char** argv)
           int immediate_value = 0;;
           if (w == 1)
             {
-              fread (&immediate_value, sizeof(word), 1, fp);
+              word immediate_value_word; 
+              fread (&immediate_value_word, sizeof(word), 1, fp);
+              immediate_value = immediate_value_word;
             }
           else
             {
-              fread (&immediate_value, sizeof(byte), 1, fp);
+              byte immediate_value_byte;
+              fread (&immediate_value_byte, sizeof(byte), 1, fp);
+              immediate_value = immediate_value_byte;
             }
-          printf("mov %s, %i\n", get_register_name(reg, w), immediate_value);
+
+          operand reg_operand;
+          reg_operand.type = OP_REGISTER;
+          reg_operand.reg = reg;
+          reg_operand.wide = w;
+
+          operand immediate;
+          immediate.type = OP_IMMEDIATE;
+          immediate.value = immediate_value;
+
+          print_mov(reg_operand, immediate);
         }
       else if (mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
         {
