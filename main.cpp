@@ -78,13 +78,13 @@ print_mov (operand destination, operand source)
 
   if (destination.type == OP_MEMORY_LOCATION && source.type == OP_IMMEDIATE)
     {
-      if (source.value)
+      if (source.wide)
         {
-          printf("word");
+          printf("word ");
         }
       else
         {
-          printf("byte");
+          printf("byte ");
         }
     }
 
@@ -275,21 +275,17 @@ main (int argc, char** argv)
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte rm = mask (second_byte, 0b00000111);
 
+          operand immediate = {};
+          immediate.type = OP_IMMEDIATE;
+          immediate.wide = w;
+
+          operand destination = {};
+          destination.type = OP_MEMORY_LOCATION;
+          destination.rm = rm;
+
           if (mod == MOV_MOD_REG_TO_REG) // register to register move
             {
               printf("; THIS SHOULD NEVER HAPPEN");
-              if (w)
-                {
-                  byte data;
-                  fread( &data, sizeof(data), 1, fp);
-                  printf("mov %s, byte %i\n", get_register_name(rm, w), data);
-                }
-              else
-                {
-                  word data;
-                  fread( &data, sizeof(data), 1, fp);
-                  printf("mov %s, word %i\n", get_register_name(rm, w), data);
-                }
             }
           else if (mod == MOV_MOD_MEM_MODE)
             {
@@ -297,77 +293,51 @@ main (int argc, char** argv)
                 {
                   word data;
                   fread( &data, sizeof(data), 1, fp);
-                  printf("mov [%s], word %i\n", RM_FIELD_NAMES[rm], data);
+                  immediate.value = data;
                 }
               else
                 {
                   byte data;
                   fread( &data, sizeof(data), 1, fp);
-                  printf("mov [%s], byte %i\n", RM_FIELD_NAMES[rm], data);
+                  immediate.value = data;
                 }
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
             {
               byte displacement;
               fread( &displacement, sizeof(displacement), 1, fp);
-              char sign = '+';
-              if (displacement < 0)
-                {
-                  sign = '-';
-                  displacement *= -1;
-                }
+              destination.displacement = displacement;
               
               if (w)
                 {
                   word data;
                   fread( &data, sizeof(data), 1, fp);
-                  printf( "mov [%s %c %u], word %i\n", 
-                          RM_FIELD_NAMES[rm], 
-                          sign,
-                          displacement,
-                          data);
+                  immediate.value = data;
                 }
               else
                 {
                   byte data;
                   fread( &data, sizeof(data), 1, fp);
-                  printf( "mov [%s %c %u], byte %i\n", 
-                          RM_FIELD_NAMES[rm], 
-                          sign,
-                          displacement,
-                          data);
+                  immediate.value = data;
                 }
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
             {
               word displacement;
               fread( &displacement, sizeof(displacement), 1, fp);
-              char sign = '+';
-              if (displacement < 0)
-                {
-                  sign = '-';
-                  displacement *= -1;
-                }
+              destination.displacement = displacement;
               
               if (w)
                 {
                   word data;
                   fread( &data, sizeof(data), 1, fp);
-                  printf( "mov [%s %c %u], word %i\n", 
-                          RM_FIELD_NAMES[rm], 
-                          sign,
-                          displacement,
-                          data);
+                  immediate.value = data;
                 }
               else
                 {
                   byte data;
                   fread( &data, sizeof(data), 1, fp);
-                  printf( "mov [%s %c %u], byte %i\n", 
-                          RM_FIELD_NAMES[rm], 
-                          sign,
-                          displacement,
-                          data);
+                  immediate.value = data;
                 }
             }
           else
@@ -376,6 +346,7 @@ main (int argc, char** argv)
                       byte_to_binary_string(first_byte),
                       byte_to_binary_string(second_byte));
             }
+          print_mov(destination, immediate);
 
         }
       else
