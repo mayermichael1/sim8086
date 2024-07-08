@@ -10,6 +10,7 @@ enum operand_type
   OP_IMMEDIATE,
   OP_REGISTER,
   OP_MEMORY_LOCATION,
+  OP_ADDRESS,
 };
 
 struct operand
@@ -20,7 +21,44 @@ struct operand
   byte reg;
   byte rm;
   word displacement;
+  word address;
 };
+
+void 
+print_operand (operand op)
+{
+  if (op.type == OP_REGISTER)
+    {
+      const char* op_string = get_register_name(
+                            op.reg, 
+                            op.wide); 
+      printf("%s", op_string);
+    }
+  else if (op.type == OP_MEMORY_LOCATION)
+    {
+      char sign = '+';
+      printf ("[ %s", RM_FIELD_NAMES[op.rm]);
+      int displacement = op.displacement;
+      if (displacement != 0)
+        {
+          if (displacement < 0)
+            {
+              displacement *= -1;
+              sign = '-';
+            }
+          printf("%c %u", sign, displacement);
+        }
+      printf("]");
+    }
+  else if (op.type == OP_IMMEDIATE)
+    {
+      printf("%i", op.value);
+    }
+  else if (op.type == OP_ADDRESS)
+    {
+      printf("[ %u ]", op.address);
+    }
+}
 
 void 
 print_mov (operand destination, operand source)
@@ -34,29 +72,7 @@ print_mov (operand destination, operand source)
 
   printf("mov ");
 
-  if (destination.type == OP_REGISTER)
-    {
-      const char* destination_string = get_register_name(
-                            destination.reg, 
-                            destination.wide); 
-      printf("%s", destination_string);
-    }
-  else if (destination.type == OP_MEMORY_LOCATION)
-    {
-      char sign = '+';
-      printf ("[ %s", RM_FIELD_NAMES[destination.rm]);
-      int displacement = destination.displacement;
-      if (displacement != 0)
-        {
-          if (displacement < 0)
-            {
-              displacement *= -1;
-              sign = '-';
-            }
-          printf("%c %u", sign, displacement);
-        }
-      printf("]");
-    }
+  print_operand(destination);
 
   printf(", ");
 
@@ -72,33 +88,7 @@ print_mov (operand destination, operand source)
         }
     }
 
-  if (source.type == OP_REGISTER)
-    {
-      const char* source_string = get_register_name(
-                            source.reg, 
-                            source.wide); 
-      printf("%s", source_string);
-    }
-  else if (source.type == OP_MEMORY_LOCATION)
-    {
-      char sign = '+';
-      printf ("[ %s", RM_FIELD_NAMES[source.rm]);
-      int displacement = source.displacement;
-      if (displacement != 0)
-        {
-          if (displacement < 0)
-            {
-              displacement *= -1;
-              sign = '-';
-            }
-          printf("%c %u", sign, displacement);
-        }
-      printf("]");
-    }
-  else if (source.type == OP_IMMEDIATE)
-    {
-      printf("%i", source.value);
-    }
+  print_operand(source);
 
   printf("\n");
 }
@@ -106,21 +96,6 @@ print_mov (operand destination, operand source)
 int 
 main (int argc, char** argv)
 {
-  printf("%i %s\n", argc, argv[0]);
-
-  operand dst;
-  operand src;
-
-  dst.type = OP_REGISTER;
-  dst.reg = 001;
-  dst.wide = true;
-
-  src.type = OP_IMMEDIATE;
-  src.value = 1;
-  src.wide = true;
-  print_mov(dst, src);
-
-  /*
   if (argc != 2)
     {
       return 1;
@@ -162,51 +137,66 @@ main (int argc, char** argv)
           byte reg = mask((second_byte >> 3), 0b00000111);
           byte rm =  mask((second_byte >> 0), 0b00000111);
 
+          operand reg_operand;
+          reg_operand.type = OP_REGISTER;
+          reg_operand.reg = reg;
+          reg_operand.wide = w;
+
+          operand rm_operand;
+
           if (mod == MOV_MOD_REG_TO_REG) // register to register move
             {
-              print_mov_register_to_register (reg, rm, d, w);
+              rm_operand.type = OP_REGISTER;
+              rm_operand.reg = rm;
+              rm_operand.wide = w;
             }
           else if (mod == MOV_MOD_MEM_MODE)
             {
               if (rm == 0b110) // special case direct address
                 {
-                  word displacement = 0;
-                  fread (&displacement, sizeof(displacement), 1, fp);
-                  if (d == 1) 
-                    {
-                      printf ("mov %s, [%u]\n", 
-                              get_register_name (reg, w), 
-                              displacement);
-                    }
-                  else
-                    {
-                      printf ("mov [%u], [%s]\n", 
-                              displacement,
-                              get_register_name (reg, w)); 
-                    }
+                  word address = 0;
+                  fread (&address, sizeof(address), 1, fp);
+                  rm_operand.type = OP_ADDRESS;
+                  rm_operand.address = address;
                 }
               else
                 {
-                  print_mov_reg_and_mem(reg, rm, d, w, 0);
+                  rm_operand.type = OP_MEMORY_LOCATION;
+                  rm_operand.rm = rm;
                 }
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
             {
               byte displacement;
               fread (&displacement, sizeof(displacement), 1, fp);
-              print_mov_reg_and_mem(reg, rm, d, w, displacement);
+              rm_operand.type = OP_MEMORY_LOCATION;
+              rm_operand.rm = rm;
+              rm_operand.wide = false;
+              rm_operand.displacement = displacement;
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
             {
               word displacement;
               fread (&displacement, sizeof(displacement), 1, fp);
-              print_mov_reg_and_mem(reg, rm, d, w, displacement);
+              rm_operand.type = OP_MEMORY_LOCATION;
+              rm_operand.rm = rm;
+              rm_operand.wide = false;
+              rm_operand.displacement = displacement;
             }
           else
             {
               printf ("; NOT IMPLEMENTED %s %s\n", 
                       byte_to_binary_string(first_byte),
                       byte_to_binary_string(second_byte));
+            }
+          
+          if (d)
+            {
+              print_mov(reg_operand, rm_operand);
+            }
+          else
+            {
+              print_mov(rm_operand, reg_operand);
             }
         }
       else if (mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
@@ -362,7 +352,6 @@ main (int argc, char** argv)
 
   fclose (fp);
 
-  */
   return 0;
 }
 
