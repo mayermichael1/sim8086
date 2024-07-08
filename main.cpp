@@ -137,12 +137,12 @@ main (int argc, char** argv)
           byte reg = mask((second_byte >> 3), 0b00000111);
           byte rm =  mask((second_byte >> 0), 0b00000111);
 
-          operand reg_operand;
+          operand reg_operand = {};
           reg_operand.type = OP_REGISTER;
           reg_operand.reg = reg;
           reg_operand.wide = w;
 
-          operand rm_operand;
+          operand rm_operand = {};
 
           if (mod == MOV_MOD_REG_TO_REG) // register to register move
             {
@@ -206,12 +206,12 @@ main (int argc, char** argv)
 
           byte w = first_byte & 1;
 
-          operand reg;
+          operand reg = {};
           reg.type = OP_REGISTER;
           reg.reg = 0;
           reg.wide = w;
 
-          operand addr;
+          operand addr = {};
           addr.type = OP_ADDRESS;
           addr.address = memory;
 
@@ -224,12 +224,12 @@ main (int argc, char** argv)
 
           byte w = first_byte & 1;
 
-          operand reg;
+          operand reg = {};
           reg.type = OP_REGISTER;
           reg.reg = 0;
           reg.wide = w;
 
-          operand addr;
+          operand addr = {};
           addr.type = OP_ADDRESS;
           addr.address = memory;
 
@@ -254,12 +254,12 @@ main (int argc, char** argv)
               immediate_value = immediate_value_byte;
             }
 
-          operand reg_operand;
+          operand reg_operand = {};
           reg_operand.type = OP_REGISTER;
           reg_operand.reg = reg;
           reg_operand.wide = w;
 
-          operand immediate;
+          operand immediate = {};
           immediate.type = OP_IMMEDIATE;
           immediate.value = immediate_value;
 
