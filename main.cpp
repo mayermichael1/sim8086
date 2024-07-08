@@ -37,7 +37,7 @@ print_operand (operand op)
   else if (op.type == OP_MEMORY_LOCATION)
     {
       char sign = '+';
-      printf ("[ %s", RM_FIELD_NAMES[op.rm]);
+      printf ("[ %s ", RM_FIELD_NAMES[op.rm]);
       int displacement = op.displacement;
       if (displacement != 0)
         {
@@ -205,7 +205,17 @@ main (int argc, char** argv)
           fread (&memory, sizeof(memory), 1, fp);
 
           byte w = first_byte & 1;
-          printf("mov %s, [%i]\n", get_register_name(0, w), memory);
+
+          operand reg;
+          reg.type = OP_REGISTER;
+          reg.reg = 0;
+          reg.wide = w;
+
+          operand addr;
+          addr.type = OP_ADDRESS;
+          addr.address = memory;
+
+          print_mov(reg, addr);
         }
       else if (mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
@@ -213,7 +223,17 @@ main (int argc, char** argv)
           fread (&memory, sizeof(memory), 1, fp);
 
           byte w = first_byte & 1;
-          printf("mov [%i], %s\n", memory, get_register_name(0, w));
+
+          operand reg;
+          reg.type = OP_REGISTER;
+          reg.reg = 0;
+          reg.wide = w;
+
+          operand addr;
+          addr.type = OP_ADDRESS;
+          addr.address = memory;
+
+          print_mov(addr, reg);
         }
       else if (mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
         {
