@@ -19,3 +19,6 @@ Currently supports:
 - [x] MOV to and from ax
 - [x] signed memory displacements
 - [x] MOV immediate to memory
+- [ ] refactor code
+- [ ] notion of where a register actually is
+- [ ] restructure the way instructions are read in
