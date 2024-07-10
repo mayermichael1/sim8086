@@ -9,30 +9,6 @@
 
 byte memory[1024 * 1024] = {0};
 
-inline byte
-read_byte (byte **cursor)
-{
-  byte value = *(byte*)(*cursor);
-  (*cursor)++;
-  return value;
-}
-
-inline word
-read_word (byte **cursor)
-{
-  word value = *(word*)(*cursor);
-  (*cursor)+=2;
-  return value;
-}
-
-inline uword
-read_uword (byte **cursor)
-{
-  uword value = *(uword*)(*cursor);
-  (*cursor)+=2;
-  return value;
-}
-
 int 
 main (int argc, char** argv)
 {
