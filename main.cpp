@@ -7,6 +7,32 @@
 #include "register_rm.h"
 #include "print.h"
 
+byte memory[1024 * 1024] = {0};
+
+inline byte
+read_byte (byte **cursor)
+{
+  byte value = *(byte*)(*cursor);
+  (*cursor)++;
+  return value;
+}
+
+inline word
+read_word (byte **cursor)
+{
+  word value = *(word*)(*cursor);
+  (*cursor)+=2;
+  return value;
+}
+
+inline uword
+read_uword (byte **cursor)
+{
+  uword value = *(uword*)(*cursor);
+  (*cursor)+=2;
+  return value;
+}
+
 int 
 main (int argc, char** argv)
 {
@@ -23,11 +49,16 @@ main (int argc, char** argv)
       return 1;
     }
 
+  fread(&memory, sizeof(byte), 1024*1024, fp);
+  fclose(fp);
+
   printf("bits 16\n"); // compatibility with source
 
-  byte first_byte;
-  while (fread (&first_byte, sizeof(byte), 1, fp)) 
+  byte *cursor = memory;
+  
+  while ((*cursor)) 
     {
+      byte first_byte = read_byte(&cursor);
       // instruction line layout:
       // OPER  DW   MOREGRM 
       // OOOOOODW   MMRRRMMM
@@ -41,8 +72,7 @@ main (int argc, char** argv)
       // check operations
       if (mask(first_byte, 0b11111100) == MOV_ADR_TO_ADR)
         {
-          byte second_byte;
-          fread(&second_byte, sizeof(byte), 1, fp);
+          byte second_byte = read_byte(&cursor);
 
           byte d =   mask((first_byte >> 1), 0b00000001);
           byte w =   mask((first_byte >> 0), 0b00000001);
@@ -68,8 +98,8 @@ main (int argc, char** argv)
             {
               if (rm == 0b110) // special case direct address
                 {
-                  word address = 0;
-                  fread (&address, sizeof(address), 1, fp);
+                  word address = read_word(&cursor);
+                  
                   rm_operand.type = OP_ADDRESS;
                   rm_operand.address = address;
                 }
@@ -81,8 +111,7 @@ main (int argc, char** argv)
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
             {
-              byte displacement;
-              fread (&displacement, sizeof(displacement), 1, fp);
+              byte displacement = read_byte(&cursor);
               rm_operand.type = OP_MEMORY_LOCATION;
               rm_operand.rm = rm;
               rm_operand.wide = false;
@@ -90,8 +119,7 @@ main (int argc, char** argv)
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
             {
-              word displacement;
-              fread (&displacement, sizeof(displacement), 1, fp);
+              word displacement = read_word(&cursor);
               rm_operand.type = OP_MEMORY_LOCATION;
               rm_operand.rm = rm;
               rm_operand.wide = false;
@@ -115,8 +143,7 @@ main (int argc, char** argv)
         }
       else if (mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
         {
-          uword memory;
-          fread (&memory, sizeof(memory), 1, fp);
+          uword memory = read_uword(&cursor);
 
           byte w = first_byte & 1;
 
@@ -133,8 +160,7 @@ main (int argc, char** argv)
         }
       else if (mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
-          uword memory;
-          fread (&memory, sizeof(memory), 1, fp);
+          uword memory = read_uword(&cursor);
 
           byte w = first_byte & 1;
 
@@ -157,14 +183,12 @@ main (int argc, char** argv)
           int immediate_value = 0;;
           if (w == 1)
             {
-              word immediate_value_word; 
-              fread (&immediate_value_word, sizeof(word), 1, fp);
+              word immediate_value_word = read_word(&cursor);
               immediate_value = immediate_value_word;
             }
           else
             {
-              byte immediate_value_byte;
-              fread (&immediate_value_byte, sizeof(byte), 1, fp);
+              byte immediate_value_byte = read_byte(&cursor);
               immediate_value = immediate_value_byte;
             }
 
@@ -183,8 +207,7 @@ main (int argc, char** argv)
         {
           byte w = first_byte & 1;
 
-          byte second_byte;
-          fread (&second_byte, sizeof(second_byte), 1, fp);
+          byte second_byte = read_byte(&cursor);
 
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte rm = mask (second_byte, 0b00000111);
@@ -205,52 +228,44 @@ main (int argc, char** argv)
             {
               if (w)
                 {
-                  word data;
-                  fread( &data, sizeof(data), 1, fp);
+                  word data = read_word(&cursor);
                   immediate.value = data;
                 }
               else
                 {
-                  byte data;
-                  fread( &data, sizeof(data), 1, fp);
+                  byte data = read_byte(&cursor);
                   immediate.value = data;
                 }
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
             {
-              byte displacement;
-              fread( &displacement, sizeof(displacement), 1, fp);
+              byte displacement = read_byte(&cursor);
               destination.displacement = displacement;
               
               if (w)
                 {
-                  word data;
-                  fread( &data, sizeof(data), 1, fp);
+                  word data = read_word(&cursor);
                   immediate.value = data;
                 }
               else
                 {
-                  byte data;
-                  fread( &data, sizeof(data), 1, fp);
+                  byte data = read_byte(&cursor);
                   immediate.value = data;
                 }
             }
           else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
             {
-              word displacement;
-              fread( &displacement, sizeof(displacement), 1, fp);
+              word displacement = read_word(&cursor);
               destination.displacement = displacement;
               
               if (w)
                 {
-                  word data;
-                  fread( &data, sizeof(data), 1, fp);
+                  word data = read_word(&cursor);
                   immediate.value = data;
                 }
               else
                 {
-                  byte data;
-                  fread( &data, sizeof(data), 1, fp);
+                  byte data = read_byte(&cursor);
                   immediate.value = data;
                 }
             }
@@ -268,9 +283,6 @@ main (int argc, char** argv)
           printf ("; NOT IMPLEMENTED %s\n",byte_to_binary_string(first_byte));
         }
     }
-
-  fclose (fp);
-
   return 0;
 }
 
