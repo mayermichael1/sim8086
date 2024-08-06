@@ -7,7 +7,11 @@
 #include "register_rm.h"
 #include "print.h"
 
-byte memory[1024 * 1024] = {0};
+#define KiB 1024
+#define MiB (KiB * KiB)
+#define GiB (KiB * KiB)
+
+byte memory[MiB] = {0};
 
 int 
 main (int argc, char** argv)
@@ -25,7 +29,7 @@ main (int argc, char** argv)
       return 1;
     }
 
-  fread(&memory, sizeof(byte), 1024*1024, fp);
+  fread(&memory, sizeof(byte), MiB, fp);
   fclose(fp);
 
   printf("bits 16\n"); // compatibility with source
