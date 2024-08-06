@@ -39,15 +39,6 @@ main (int argc, char** argv)
   while ((*cursor)) 
     {
       byte first_byte = read_byte(&cursor);
-      // instruction line layout:
-      // OPER  DW   MOREGRM 
-      // OOOOOODW   MMRRRMMM
-      // OPER ... 6 bit operator
-      // D ... order of register fields
-      // W ... 16 bit or 8bit 
-      // MO ... MOD
-      // REG ... REGISTER
-      // RM ... Register or Memory
 
       // check operations
       if (mask(first_byte, 0b11111100) == MOV_ADR_TO_ADR)
