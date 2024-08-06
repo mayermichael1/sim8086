@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-static const char* REGISTER_NAMES[] = 
+const char* REGISTER_NAMES[] = 
 {
   "al",
   "cl",
@@ -15,7 +15,7 @@ static const char* REGISTER_NAMES[] =
   "bh"
 };
 
-static const char* REGISTER_NAMES_WIDE[] = 
+const char* REGISTER_NAMES_WIDE[] = 
 {
   "ax",
   "cx",
@@ -27,7 +27,7 @@ static const char* REGISTER_NAMES_WIDE[] =
   "di"
 };
 
-static const char* RM_FIELD_NAMES[] = 
+const char* RM_FIELD_NAMES[] = 
 {
   "bx + si",
   "bx + di",
