@@ -11,7 +11,81 @@
 #define MiB (KiB * KiB)
 #define GiB (KiB * KiB)
 
+byte registers[8*2] = {0};
 byte memory[MiB] = {0};
+
+inline byte
+get_low_byte (word value)
+{
+  word masked = value & 0b11111111;
+  return masked;
+}
+
+inline byte
+get_high_byte (word value)
+{
+  word shift = value >> 8;
+  word masked = shift & 0b11111111;
+  return masked;
+}
+
+inline word
+read_value_from_register (byte *registers, operand reg)
+{
+  word value = 0;
+  if (reg.type == OP_REGISTER)
+    {
+      if (reg.wide)
+        {
+          byte offset = REGISTER_OFFSET_WIDE[reg.reg];
+          value = *(word*)(registers+offset);
+        }
+      else
+        {
+          byte offset = REGISTER_OFFSET[reg.reg];
+          value = *(registers+offset);
+        }
+    }
+  return value;
+}
+
+inline void 
+write_value_to_register (byte *registers, operand reg, word value)
+{
+  if (reg.type == OP_REGISTER)
+    {
+      byte offset = REGISTER_OFFSET[reg.reg];
+
+      byte lowValue = get_low_byte(value);
+      byte highValue = get_high_byte(value);
+
+      if (reg.wide)
+        {
+          offset = REGISTER_OFFSET_WIDE[reg.reg];
+          registers[offset+1] = highValue;
+        }
+
+      registers[offset] = lowValue;
+    }
+}
+
+void 
+simulate_mov(operand destination, operand source)
+{
+
+  if (destination.type == OP_REGISTER)
+    {
+      if (source.type == OP_IMMEDIATE)
+        {
+          write_value_to_register(registers, destination, source.value);
+       }
+      else if (source.type == OP_REGISTER)
+        {
+          word value = read_value_from_register(registers, source);
+          write_value_to_register(registers, destination, value);
+        }
+    }
+}
 
 int 
 main (int argc, char** argv)
@@ -32,6 +106,22 @@ main (int argc, char** argv)
   fread(&memory, sizeof(byte), MiB, fp);
   fclose(fp);
 
+#if 0
+  operand a, b;
+  a.type = OP_REGISTER;
+  a.wide = true;
+  a.reg = 0;
+
+  b.type = OP_IMMEDIATE;
+  b.value = 257;
+
+  simulate_mov(a, b);
+  print_registers(registers);
+  printf("ax: %i", read_value_from_register(registers, a));
+#endif
+
+
+#if 1
   printf("bits 16\n"); // compatibility with source
 
   byte *cursor = memory;
@@ -106,10 +196,12 @@ main (int argc, char** argv)
           if (d)
             {
               print_mov(reg_operand, rm_operand);
+              simulate_mov(reg_operand, rm_operand);
             }
           else
             {
               print_mov(rm_operand, reg_operand);
+              simulate_mov(rm_operand, reg_operand);
             }
         }
       else if (mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
@@ -128,6 +220,7 @@ main (int argc, char** argv)
           addr.address = memory;
 
           print_mov(reg, addr);
+          simulate_mov(reg, addr);
         }
       else if (mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
@@ -145,6 +238,7 @@ main (int argc, char** argv)
           addr.address = memory;
 
           print_mov(addr, reg);
+          simulate_mov(addr, reg);
         }
       else if (mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
         {
@@ -173,6 +267,7 @@ main (int argc, char** argv)
           immediate.value = immediate_value;
 
           print_mov(reg_operand, immediate);
+          simulate_mov(reg_operand, immediate);
         }
       else if (mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
         {
@@ -247,6 +342,7 @@ main (int argc, char** argv)
                       byte_to_binary_string(second_byte));
             }
           print_mov(destination, immediate);
+          simulate_mov(destination, immediate);
 
         }
       else
@@ -254,6 +350,9 @@ main (int argc, char** argv)
           printf ("; NOT IMPLEMENTED %s\n",byte_to_binary_string(first_byte));
         }
     }
+#endif
+    print_registers(registers);
   return 0;
 }
+
 

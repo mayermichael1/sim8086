@@ -15,6 +15,18 @@ static const char* REGISTER_NAMES[] =
   "bh"
 };
 
+static const word REGISTER_OFFSET[] =
+{
+  0,
+  4,
+  6,
+  2,
+  1,
+  5,
+  7,
+  3
+};
+
 static const char* REGISTER_NAMES_WIDE[] = 
 {
   "ax",
@@ -25,6 +37,18 @@ static const char* REGISTER_NAMES_WIDE[] =
   "bp",
   "si",
   "di"
+};
+
+static const word REGISTER_OFFSET_WIDE[] =
+{
+  0,
+  4,
+  6,
+  2,
+  8,
+  10,
+  12,
+  14
 };
 
 static const char* RM_FIELD_NAMES[] = 

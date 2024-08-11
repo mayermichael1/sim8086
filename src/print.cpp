@@ -97,28 +97,28 @@ print_registers (byte* registers)
   word si = (word)(*(word*)(registers+12));
   word di = (word)(*(word*)(registers+14));
 
-  printf("registers:\n");
+  printf(";registers:\n");
 
-  printf("al: %i\t", al);
-  printf("ah: %i\t", ah);
-  printf("ax: %i\n", ax);
+  printf(";al: %i\t", al);
+  printf(";ah: %i\t", ah);
+  printf(";ax: %i\n", ax);
 
-  printf("bl: %i\t", bl);
-  printf("bh: %i\t", bh);
-  printf("bx: %i\n", bx);
+  printf(";bl: %i\t", bl);
+  printf(";bh: %i\t", bh);
+  printf(";bx: %i\n", bx);
 
-  printf("cl: %i\t", cl);
-  printf("ch: %i\t", ch);
-  printf("cx: %i\n", cx);
+  printf(";cl: %i\t", cl);
+  printf(";ch: %i\t", ch);
+  printf(";cx: %i\n", cx);
 
-  printf("dl: %i\t", dl);
-  printf("dh: %i\t", dh);
-  printf("dx: %i\n", dx);
+  printf(";dl: %i\t", dl);
+  printf(";dh: %i\t", dh);
+  printf(";dx: %i\n", dx);
 
-  printf("sp: %i\n", sp);
-  printf("bp: %i\n", bp);
-  printf("si: %i\n", si);
-  printf("di: %i\n", di);
+  printf(";sp: %i\n", sp);
+  printf(";bp: %i\n", bp);
+  printf(";si: %i\n", si);
+  printf(";di: %i\n", di);
 
   printf("\n");
 
