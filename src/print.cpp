@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "register_rm.h"
+#include "simulate.h"
 
 void 
 print_operand (operand op)
@@ -76,20 +77,12 @@ print_mov (operand destination, operand source)
 void 
 print_registers (byte* registers)
 {
-  byte al = (byte)(*(registers));
-  byte ah = (byte)(*(registers+1));
+  //TODO: can not easily create a operand refering to a specific register
+  //      without knowing the number
+
   word ax = (word)(*(word*)(registers));
-
-  byte bl = (byte)(*(registers+2));
-  byte bh = (byte)(*(registers+3));
   word bx = (word)(*(word*)(registers+2));
-
-  byte cl = (byte)(*(registers+4));
-  byte ch = (byte)(*(registers+5));
   word cx = (word)(*(word*)(registers+4));
-
-  byte dl = (byte)(*(registers+6));
-  byte dh = (byte)(*(registers+7));
   word dx = (word)(*(word*)(registers+6));
 
   word sp = (word)(*(word*)(registers+8));
@@ -99,20 +92,20 @@ print_registers (byte* registers)
 
   printf(";registers:\n");
 
-  printf(";al: %i\t", al);
-  printf(";ah: %i\t", ah);
+  printf(";al: %i\t", get_low_byte(ax));
+  printf(";ah: %i\t", get_high_byte(ax));
   printf(";ax: %i\n", ax);
 
-  printf(";bl: %i\t", bl);
-  printf(";bh: %i\t", bh);
+  printf(";bl: %i\t", get_low_byte(bx));
+  printf(";bh: %i\t", get_high_byte(bx));
   printf(";bx: %i\n", bx);
 
-  printf(";cl: %i\t", cl);
-  printf(";ch: %i\t", ch);
+  printf(";cl: %i\t", get_low_byte(cx));
+  printf(";ch: %i\t", get_high_byte(cx));
   printf(";cx: %i\n", cx);
 
-  printf(";dl: %i\t", dl);
-  printf(";dh: %i\t", dh);
+  printf(";dl: %i\t", get_low_byte(dx));
+  printf(";dh: %i\t", get_high_byte(dx));
   printf(";dx: %i\n", dx);
 
   printf(";sp: %i\n", sp);
