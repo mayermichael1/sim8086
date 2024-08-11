@@ -36,4 +36,19 @@ read_uword (byte **cursor)
   return value;
 }
 
+inline byte
+get_low_byte (word value)
+{
+  word masked = value & 0b11111111;
+  return masked;
+}
+
+inline byte
+get_high_byte (word value)
+{
+  word shift = value >> 8;
+  word masked = shift & 0b11111111;
+  return masked;
+}
+
 #endif

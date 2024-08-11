@@ -14,21 +14,6 @@
 byte registers[8*2] = {0};
 byte memory[MiB] = {0};
 
-inline byte
-get_low_byte (word value)
-{
-  word masked = value & 0b11111111;
-  return masked;
-}
-
-inline byte
-get_high_byte (word value)
-{
-  word shift = value >> 8;
-  word masked = shift & 0b11111111;
-  return masked;
-}
-
 inline word
 read_value_from_register (byte *registers, operand reg)
 {
