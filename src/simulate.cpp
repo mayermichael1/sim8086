@@ -1,7 +1,5 @@
 #include "simulate.h"
 
-#include "register_rm.h"
-
 void 
 simulate_mov(byte* registers, operand destination, operand source)
 {
