@@ -20,5 +20,6 @@ Currently supports:
 - [x] signed memory displacements
 - [x] MOV immediate to memory
 - [x] refactor code
-- [ ] notion of where a register actually is
+- [x] notion of where a register actually is
 - [ ] restructure the way instructions are read in
+- [ ] segment registers are missing
