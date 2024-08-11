@@ -6,6 +6,7 @@
 #include "binary.h"
 #include "register_rm.h"
 #include "print.h"
+#include "simulate.h"
 
 #define KiB 1024
 #define MiB (KiB * KiB)
@@ -13,24 +14,6 @@
 
 byte registers[8*2] = {0};
 byte memory[MiB] = {0};
-
-void 
-simulate_mov(operand destination, operand source)
-{
-
-  if (destination.type == OP_REGISTER)
-    {
-      if (source.type == OP_IMMEDIATE)
-        {
-          write_value_to_register(registers, destination, source.value);
-       }
-      else if (source.type == OP_REGISTER)
-        {
-          word value = read_value_from_register(registers, source);
-          write_value_to_register(registers, destination, value);
-        }
-    }
-}
 
 int 
 main (int argc, char** argv)
@@ -60,7 +43,7 @@ main (int argc, char** argv)
   b.type = OP_IMMEDIATE;
   b.value = 257;
 
-  simulate_mov(a, b);
+  simulate_mov(registers,a, b);
   print_registers(registers);
   printf("ax: %i", read_value_from_register(registers, a));
 #endif
@@ -141,12 +124,12 @@ main (int argc, char** argv)
           if (d)
             {
               print_mov(reg_operand, rm_operand);
-              simulate_mov(reg_operand, rm_operand);
+              simulate_mov(registers,reg_operand, rm_operand);
             }
           else
             {
               print_mov(rm_operand, reg_operand);
-              simulate_mov(rm_operand, reg_operand);
+              simulate_mov(registers,rm_operand, reg_operand);
             }
         }
       else if (mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
@@ -165,7 +148,7 @@ main (int argc, char** argv)
           addr.address = memory;
 
           print_mov(reg, addr);
-          simulate_mov(reg, addr);
+          simulate_mov(registers,reg, addr);
         }
       else if (mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
@@ -183,7 +166,7 @@ main (int argc, char** argv)
           addr.address = memory;
 
           print_mov(addr, reg);
-          simulate_mov(addr, reg);
+          simulate_mov(registers,addr, reg);
         }
       else if (mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
         {
@@ -212,7 +195,7 @@ main (int argc, char** argv)
           immediate.value = immediate_value;
 
           print_mov(reg_operand, immediate);
-          simulate_mov(reg_operand, immediate);
+          simulate_mov(registers,reg_operand, immediate);
         }
       else if (mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
         {
@@ -287,7 +270,7 @@ main (int argc, char** argv)
                       byte_to_binary_string(second_byte));
             }
           print_mov(destination, immediate);
-          simulate_mov(destination, immediate);
+          simulate_mov(registers,destination, immediate);
 
         }
       else

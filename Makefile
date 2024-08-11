@@ -10,6 +10,7 @@ OBJECTS := $(BUILD_DIR)/main.o
 # add objects here like this:
 OBJECTS += $(BUILD_DIR)/binary.o
 OBJECTS += $(BUILD_DIR)/print.o
+OBJECTS += $(BUILD_DIR)/simulate.o
 
 CXXFLAGS += -O0 -g
 #CXXFLAGS += -O2
@@ -26,6 +27,9 @@ $(BUILD_DIR)/binary.o: src/binary.cpp include/types.h include/binary.h
 
 $(BUILD_DIR)/print.o: src/print.cpp include/print.h include/types.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/print.cpp -o $(BUILD_DIR)/print.o
+
+$(BUILD_DIR)/simulate.o: src/simulate.cpp include/simulate.h include/types.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/simulate.cpp -o $(BUILD_DIR)/simulate.o
 
 .PHONY: clean
 clean: 
