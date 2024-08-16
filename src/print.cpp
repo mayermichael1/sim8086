@@ -95,6 +95,11 @@ print_registers (byte* registers)
   word si = (word)(*(word*)(registers+12));
   word di = (word)(*(word*)(registers+14));
 
+  word cs = (word)(*(word*)(registers+16));
+  word ds = (word)(*(word*)(registers+18));
+  word ss = (word)(*(word*)(registers+20));
+  word es = (word)(*(word*)(registers+22));
+
   printf(";registers:\n");
 
   printf(";al: %i\t", get_low_byte(ax));
@@ -117,6 +122,11 @@ print_registers (byte* registers)
   printf(";bp: %i\n", bp);
   printf(";si: %i\n", si);
   printf(";di: %i\n", di);
+
+  printf(";cs: %i\n", cs);
+  printf(";ds: %i\n", ds);
+  printf(";ss: %i\n", ss);
+  printf(";es: %i\n", es);
 
   printf("\n");
 

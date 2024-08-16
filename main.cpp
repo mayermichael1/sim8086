@@ -12,7 +12,7 @@
 #define MiB (KiB * KiB)
 #define GiB (KiB * KiB)
 
-byte registers[8*2] = {0};
+byte registers[12*2] = {0};
 byte memory[MiB] = {0};
 
 int 
@@ -278,7 +278,7 @@ main (int argc, char** argv)
           byte second_byte = read_byte(&cursor);
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte sr = mask((second_byte >> 3), 0b00000011);
-          byte rm = mask(second_byte, 0b00000011); 
+          byte rm = mask(second_byte, 0b00000111); 
 
           operand destination;
           operand source;
@@ -330,14 +330,16 @@ main (int argc, char** argv)
 
           destination.type = OP_SEGMENT;
           destination.sr = sr;
+
           print_mov(destination, source);
+          simulate_mov(registers, destination, source);
         }
       else if (first_byte == MOV_SEGMENT_TO_REG_OR_MEM)
         {    
           byte second_byte = read_byte(&cursor);
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte sr = mask((second_byte >> 3), 0b00000011);
-          byte rm = mask(second_byte, 0b00000011); 
+          byte rm = mask(second_byte, 0b00000111); 
 
           operand destination;
           operand source;
@@ -389,7 +391,9 @@ main (int argc, char** argv)
 
           source.type = OP_SEGMENT;
           source.sr = sr;
+
           print_mov(destination, source);
+          simulate_mov(registers, destination, source);
         }
       else
         {

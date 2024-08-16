@@ -24,6 +24,11 @@ read_value_from_register (byte *registers, operand reg)
           value = *(registers+offset);
         }
     }
+  else if (reg.type == OP_SEGMENT)
+    {
+      byte offset = SEGMENT_REGISTER_OFFSET[reg.sr];
+      value = *(word*)(registers+offset);
+    }
   return value;
 }
 
@@ -43,6 +48,16 @@ write_value_to_register (byte *registers, operand reg, word value)
           registers[offset+1] = highValue;
         }
 
+      registers[offset] = lowValue;
+    }
+  else if (reg.type == OP_SEGMENT)
+    {
+      byte offset = SEGMENT_REGISTER_OFFSET[reg.sr];
+
+      byte lowValue = get_low_byte(value);
+      byte highValue = get_high_byte(value);
+
+      registers[offset+1] = highValue;
       registers[offset] = lowValue;
     }
 }
