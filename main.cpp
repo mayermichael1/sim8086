@@ -12,6 +12,54 @@
 #define MiB (KiB * KiB)
 #define GiB (KiB * KiB)
 
+void
+create_register_by_mod (byte mod, byte rm, bool w, byte **cursor, 
+  operand *operand)
+{
+  if (mod == MOV_MOD_REG_TO_REG) // register to register move
+    {
+      operand->type = OP_REGISTER;
+      operand->reg = rm;
+      operand->wide = w;
+    }
+  else if (mod == MOV_MOD_MEM_MODE)
+    {
+      if (rm == 0b110) // special case direct address
+        {
+          word address = read_word(cursor);
+          
+          operand->type = OP_ADDRESS;
+          operand->address = address;
+        }
+      else
+        {
+          operand->type = OP_MEMORY_LOCATION;
+          operand->rm = rm;
+          operand->wide = false;
+        }
+    }
+  else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
+    {
+      byte displacement = read_byte(cursor);
+      operand->type = OP_MEMORY_LOCATION;
+      operand->rm = rm;
+      operand->wide = false;
+      operand->displacement = displacement;
+    }
+  else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
+    {
+      word displacement = read_word(cursor);
+      operand->type = OP_MEMORY_LOCATION;
+      operand->rm = rm;
+      operand->wide = false;
+      operand->displacement = displacement;
+    }
+  else
+    {
+      printf ("; NOT IMPLEMENTED mod: %i", mod);
+    }
+}
+
 byte registers[12*2] = {0};
 byte memory[MiB] = {0};
 
@@ -77,49 +125,7 @@ main (int argc, char** argv)
 
           operand rm_operand = {};
 
-          if (mod == MOV_MOD_REG_TO_REG) // register to register move
-            {
-              rm_operand.type = OP_REGISTER;
-              rm_operand.reg = rm;
-              rm_operand.wide = w;
-            }
-          else if (mod == MOV_MOD_MEM_MODE)
-            {
-              if (rm == 0b110) // special case direct address
-                {
-                  word address = read_word(&cursor);
-                  
-                  rm_operand.type = OP_ADDRESS;
-                  rm_operand.address = address;
-                }
-              else
-                {
-                  rm_operand.type = OP_MEMORY_LOCATION;
-                  rm_operand.rm = rm;
-                }
-            }
-          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
-            {
-              byte displacement = read_byte(&cursor);
-              rm_operand.type = OP_MEMORY_LOCATION;
-              rm_operand.rm = rm;
-              rm_operand.wide = false;
-              rm_operand.displacement = displacement;
-            }
-          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
-            {
-              word displacement = read_word(&cursor);
-              rm_operand.type = OP_MEMORY_LOCATION;
-              rm_operand.rm = rm;
-              rm_operand.wide = false;
-              rm_operand.displacement = displacement;
-            }
-          else
-            {
-              printf ("; NOT IMPLEMENTED %s %s\n", 
-                      byte_to_binary_string(first_byte),
-                      byte_to_binary_string(second_byte));
-            }
+          create_register_by_mod(mod, rm, w, &cursor, &rm_operand);
           
           if (d)
             {
@@ -214,61 +220,17 @@ main (int argc, char** argv)
           destination.type = OP_MEMORY_LOCATION;
           destination.rm = rm;
 
-          if (mod == MOV_MOD_REG_TO_REG) // register to register move
+          create_register_by_mod(mod, rm, w, &cursor, &destination);
+          
+          if (immediate.wide)
             {
-              printf("; THIS SHOULD NEVER HAPPEN");
+              immediate.value = read_word(&cursor);
             }
-          else if (mod == MOV_MOD_MEM_MODE)
+          else 
             {
-              if (w)
-                {
-                  word data = read_word(&cursor);
-                  immediate.value = data;
-                }
-              else
-                {
-                  byte data = read_byte(&cursor);
-                  immediate.value = data;
-                }
+              immediate.value = read_byte(&cursor);
             }
-          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
-            {
-              byte displacement = read_byte(&cursor);
-              destination.displacement = displacement;
-              
-              if (w)
-                {
-                  word data = read_word(&cursor);
-                  immediate.value = data;
-                }
-              else
-                {
-                  byte data = read_byte(&cursor);
-                  immediate.value = data;
-                }
-            }
-          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
-            {
-              word displacement = read_word(&cursor);
-              destination.displacement = displacement;
-              
-              if (w)
-                {
-                  word data = read_word(&cursor);
-                  immediate.value = data;
-                }
-              else
-                {
-                  byte data = read_byte(&cursor);
-                  immediate.value = data;
-                }
-            }
-          else
-            {
-              printf ("; NOT IMPLEMENTED %s %s\n", 
-                      byte_to_binary_string(first_byte),
-                      byte_to_binary_string(second_byte));
-            }
+
           print_mov(destination, immediate);
           simulate_mov(registers,destination, immediate);
 
@@ -283,50 +245,7 @@ main (int argc, char** argv)
           operand destination;
           operand source;
 
-          //TODO: pull out
-          if (mod == MOV_MOD_REG_TO_REG) // register to register move
-            {
-              source.type = OP_REGISTER;
-              source.reg = rm;
-              source.wide = true;
-            }
-          else if (mod == MOV_MOD_MEM_MODE)
-            {
-              if (rm == 0b110) // special case direct address
-                {
-                  word address = read_word(&cursor);
-                  
-                  source.type = OP_ADDRESS;
-                  source.address = address;
-                }
-              else
-                {
-                  source.type = OP_MEMORY_LOCATION;
-                  source.rm = rm;
-                }
-            }
-          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
-            {
-              byte displacement = read_byte(&cursor);
-              source.type = OP_MEMORY_LOCATION;
-              source.rm = rm;
-              source.wide = false;
-              source.displacement = displacement;
-            }
-          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
-            {
-              word displacement = read_word(&cursor);
-              source.type = OP_MEMORY_LOCATION;
-              source.rm = rm;
-              source.wide = false;
-              source.displacement = displacement;
-            }
-          else
-            {
-              printf ("; NOT IMPLEMENTED %s %s\n", 
-                      byte_to_binary_string(first_byte),
-                      byte_to_binary_string(second_byte));
-            }
+          create_register_by_mod(mod, rm, true, &cursor, &source);
 
           destination.type = OP_SEGMENT;
           destination.sr = sr;
@@ -343,51 +262,8 @@ main (int argc, char** argv)
 
           operand destination;
           operand source;
-
-          //TODO: pull out
-          if (mod == MOV_MOD_REG_TO_REG) // register to register move
-            {
-              destination.type = OP_REGISTER;
-              destination.reg = rm;
-              destination.wide = true;
-            }
-          else if (mod == MOV_MOD_MEM_MODE)
-            {
-              if (rm == 0b110) // special case direct address
-                {
-                  word address = read_word(&cursor);
-                  
-                  destination.type = OP_ADDRESS;
-                  destination.address = address;
-                }
-              else
-                {
-                  destination.type = OP_MEMORY_LOCATION;
-                  destination.rm = rm;
-                }
-            }
-          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
-            {
-              byte displacement = read_byte(&cursor);
-              destination.type = OP_MEMORY_LOCATION;
-              destination.rm = rm;
-              destination.wide = false;
-              destination.displacement = displacement;
-            }
-          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
-            {
-              word displacement = read_word(&cursor);
-              destination.type = OP_MEMORY_LOCATION;
-              destination.rm = rm;
-              destination.wide = false;
-              destination.displacement = displacement;
-            }
-          else
-            {
-              printf ("; NOT IMPLEMENTED %s %s\n", 
-                      byte_to_binary_string(first_byte),
-                      byte_to_binary_string(second_byte));
-            }
+          
+          create_register_by_mod(mod, rm, true, &cursor, &destination);
 
           source.type = OP_SEGMENT;
           source.sr = sr;
