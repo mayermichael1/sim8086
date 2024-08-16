@@ -273,6 +273,124 @@ main (int argc, char** argv)
           simulate_mov(registers,destination, immediate);
 
         }
+      else if (first_byte == MOV_REG_OR_MEM_TO_SEGMENT)
+        {
+          byte second_byte = read_byte(&cursor);
+          byte mod = mask ((second_byte >> 6), 0b00000011);
+          byte sr = mask((second_byte >> 3), 0b00000011);
+          byte rm = mask(second_byte, 0b00000011); 
+
+          operand destination;
+          operand source;
+
+          //TODO: pull out
+          if (mod == MOV_MOD_REG_TO_REG) // register to register move
+            {
+              source.type = OP_REGISTER;
+              source.reg = rm;
+              source.wide = true;
+            }
+          else if (mod == MOV_MOD_MEM_MODE)
+            {
+              if (rm == 0b110) // special case direct address
+                {
+                  word address = read_word(&cursor);
+                  
+                  source.type = OP_ADDRESS;
+                  source.address = address;
+                }
+              else
+                {
+                  source.type = OP_MEMORY_LOCATION;
+                  source.rm = rm;
+                }
+            }
+          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
+            {
+              byte displacement = read_byte(&cursor);
+              source.type = OP_MEMORY_LOCATION;
+              source.rm = rm;
+              source.wide = false;
+              source.displacement = displacement;
+            }
+          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
+            {
+              word displacement = read_word(&cursor);
+              source.type = OP_MEMORY_LOCATION;
+              source.rm = rm;
+              source.wide = false;
+              source.displacement = displacement;
+            }
+          else
+            {
+              printf ("; NOT IMPLEMENTED %s %s\n", 
+                      byte_to_binary_string(first_byte),
+                      byte_to_binary_string(second_byte));
+            }
+
+          destination.type = OP_SEGMENT;
+          destination.sr = sr;
+          print_mov(destination, source);
+        }
+      else if (first_byte == MOV_SEGMENT_TO_REG_OR_MEM)
+        {    
+          byte second_byte = read_byte(&cursor);
+          byte mod = mask ((second_byte >> 6), 0b00000011);
+          byte sr = mask((second_byte >> 3), 0b00000011);
+          byte rm = mask(second_byte, 0b00000011); 
+
+          operand destination;
+          operand source;
+
+          //TODO: pull out
+          if (mod == MOV_MOD_REG_TO_REG) // register to register move
+            {
+              destination.type = OP_REGISTER;
+              destination.reg = rm;
+              destination.wide = true;
+            }
+          else if (mod == MOV_MOD_MEM_MODE)
+            {
+              if (rm == 0b110) // special case direct address
+                {
+                  word address = read_word(&cursor);
+                  
+                  destination.type = OP_ADDRESS;
+                  destination.address = address;
+                }
+              else
+                {
+                  destination.type = OP_MEMORY_LOCATION;
+                  destination.rm = rm;
+                }
+            }
+          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
+            {
+              byte displacement = read_byte(&cursor);
+              destination.type = OP_MEMORY_LOCATION;
+              destination.rm = rm;
+              destination.wide = false;
+              destination.displacement = displacement;
+            }
+          else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
+            {
+              word displacement = read_word(&cursor);
+              destination.type = OP_MEMORY_LOCATION;
+              destination.rm = rm;
+              destination.wide = false;
+              destination.displacement = displacement;
+            }
+          else
+            {
+              printf ("; NOT IMPLEMENTED %s %s\n", 
+                      byte_to_binary_string(first_byte),
+                      byte_to_binary_string(second_byte));
+            }
+
+          source.type = OP_SEGMENT;
+          source.sr = sr;
+          print_mov(destination, source);
+        }
       else
         {
           printf ("; NOT IMPLEMENTED %s\n",byte_to_binary_string(first_byte));

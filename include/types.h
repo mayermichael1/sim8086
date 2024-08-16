@@ -13,6 +13,7 @@ enum operand_type
   OP_REGISTER,
   OP_MEMORY_LOCATION,
   OP_ADDRESS,
+  OP_SEGMENT,
 };
 
 struct operand
@@ -24,6 +25,7 @@ struct operand
   byte rm;
   word displacement;
   word address;
+  byte sr;
 };
 
 #endif

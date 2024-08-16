@@ -39,6 +39,11 @@ print_operand (operand op)
     {
       printf("[%u]", op.address);
     }
+  else if (op.type == OP_SEGMENT)
+    {
+      const char* op_string = SEGMENT_REGISTER_NAMES[op.sr];
+      printf("%s", op_string);
+    }
 }
 
 void 
