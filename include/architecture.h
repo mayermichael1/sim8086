@@ -4,23 +4,6 @@
 #include "types.h"
 #include "binary.h"
 
-//
-//  segment registers register memory order
-//
-//  CS  16
-//  DS  18
-//  SS  20
-//  ES  22
-//
-//  IP
-//
-//
-//  segment register instruction order
-//
-//  ES 00
-//  CS 01
-//  SS 10
-//  DS 11
 extern const char* REGISTER_NAMES[];
 extern const word REGISTER_OFFSET[];
 extern const char* REGISTER_NAMES_WIDE[];
