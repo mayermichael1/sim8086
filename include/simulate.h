@@ -2,7 +2,7 @@
 #define SIMULATE_h
 
 #include "types.h"
-#include "register_rm.h"
+#include "architecture.h"
 
 void 
 simulate_mov(byte *registers, operand destination, operand source);

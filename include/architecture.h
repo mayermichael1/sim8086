@@ -1,5 +1,5 @@
-#ifndef REGISTER_RM_H
-#define REGISTER_RM_H
+#ifndef ARCHITECTURE_H
+#define ARCHITECTURE_H
 
 #include "types.h"
 #include "binary.h"

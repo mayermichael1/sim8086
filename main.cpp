@@ -4,7 +4,7 @@
 
 #include "types.h"
 #include "binary.h"
-#include "register_rm.h"
+#include "architecture.h"
 #include "print.h"
 #include "simulate.h"
 

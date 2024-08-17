@@ -1,4 +1,4 @@
-#include "register_rm.h"
+#include "architecture.h"
 
 #include <stdio.h>
 

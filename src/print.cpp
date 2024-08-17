@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "register_rm.h"
+#include "architecture.h"
 #include "simulate.h"
 
 void 
