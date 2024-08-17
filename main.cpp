@@ -59,7 +59,7 @@ main (int argc, char** argv)
       byte first_byte = read_byte(&cursor);
 
       // check operations
-      if (mask(first_byte, 0b11111100) == MOV_ADR_TO_ADR)
+      if ((ubyte)mask(first_byte, 0b11111100) == MOV_ADR_TO_ADR)
         {
           byte second_byte = read_byte(&cursor);
 
@@ -90,7 +90,7 @@ main (int argc, char** argv)
               simulate_mov(registers,rm_operand, reg_operand);
             }
         }
-      else if (mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
+      else if ((ubyte)mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
         {
           uword memory = read_uword(&cursor);
 
@@ -108,7 +108,7 @@ main (int argc, char** argv)
           print_mov(reg, addr);
           simulate_mov(registers,reg, addr);
         }
-      else if (mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
+      else if ((ubyte)mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
           uword memory = read_uword(&cursor);
 
@@ -126,7 +126,7 @@ main (int argc, char** argv)
           print_mov(addr, reg);
           simulate_mov(registers,addr, reg);
         }
-      else if (mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
+      else if ((ubyte)mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
         {
           byte w = (first_byte >> 3) & 1;
           byte reg = mask (first_byte, 0b00000111);
@@ -155,7 +155,7 @@ main (int argc, char** argv)
           print_mov(reg_operand, immediate);
           simulate_mov(registers,reg_operand, immediate);
         }
-      else if (mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
+      else if ((ubyte)mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
         {
           byte w = first_byte & 1;
 
@@ -187,7 +187,7 @@ main (int argc, char** argv)
           simulate_mov(registers,destination, immediate);
 
         }
-      else if (first_byte == MOV_REG_OR_MEM_TO_SEGMENT)
+      else if ((ubyte)first_byte == MOV_REG_OR_MEM_TO_SEGMENT)
         {
           byte second_byte = read_byte(&cursor);
           byte mod = mask ((second_byte >> 6), 0b00000011);
@@ -205,7 +205,7 @@ main (int argc, char** argv)
           print_mov(destination, source);
           simulate_mov(registers, destination, source);
         }
-      else if (first_byte == MOV_SEGMENT_TO_REG_OR_MEM)
+      else if ((ubyte)first_byte == MOV_SEGMENT_TO_REG_OR_MEM)
         {    
           byte second_byte = read_byte(&cursor);
           byte mod = mask ((second_byte >> 6), 0b00000011);
