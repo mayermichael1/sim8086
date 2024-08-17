@@ -12,54 +12,6 @@
 #define MiB (KiB * KiB)
 #define GiB (KiB * KiB)
 
-void
-create_register_by_mod (byte mod, byte rm, bool w, byte **cursor, 
-  operand *operand)
-{
-  if (mod == MOV_MOD_REG_TO_REG) // register to register move
-    {
-      operand->type = OP_REGISTER;
-      operand->reg = rm;
-      operand->wide = w;
-    }
-  else if (mod == MOV_MOD_MEM_MODE)
-    {
-      if (rm == 0b110) // special case direct address
-        {
-          word address = read_word(cursor);
-          
-          operand->type = OP_ADDRESS;
-          operand->address = address;
-        }
-      else
-        {
-          operand->type = OP_MEMORY_LOCATION;
-          operand->rm = rm;
-          operand->wide = false;
-        }
-    }
-  else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
-    {
-      byte displacement = read_byte(cursor);
-      operand->type = OP_MEMORY_LOCATION;
-      operand->rm = rm;
-      operand->wide = false;
-      operand->displacement = displacement;
-    }
-  else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
-    {
-      word displacement = read_word(cursor);
-      operand->type = OP_MEMORY_LOCATION;
-      operand->rm = rm;
-      operand->wide = false;
-      operand->displacement = displacement;
-    }
-  else
-    {
-      printf ("; NOT IMPLEMENTED mod: %i", mod);
-    }
-}
-
 byte registers[12*2] = {0};
 byte memory[MiB] = {0};
 
@@ -125,7 +77,7 @@ main (int argc, char** argv)
 
           operand rm_operand = {};
 
-          create_register_by_mod(mod, rm, w, &cursor, &rm_operand);
+          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
           
           if (d)
             {
@@ -220,7 +172,7 @@ main (int argc, char** argv)
           destination.type = OP_MEMORY_LOCATION;
           destination.rm = rm;
 
-          create_register_by_mod(mod, rm, w, &cursor, &destination);
+          fill_operand_by_mod(mod, rm, w, &cursor, &destination);
           
           if (immediate.wide)
             {
@@ -245,7 +197,7 @@ main (int argc, char** argv)
           operand destination;
           operand source;
 
-          create_register_by_mod(mod, rm, true, &cursor, &source);
+          fill_operand_by_mod(mod, rm, true, &cursor, &source);
 
           destination.type = OP_SEGMENT;
           destination.sr = sr;
@@ -263,7 +215,7 @@ main (int argc, char** argv)
           operand destination;
           operand source;
           
-          create_register_by_mod(mod, rm, true, &cursor, &destination);
+          fill_operand_by_mod(mod, rm, true, &cursor, &destination);
 
           source.type = OP_SEGMENT;
           source.sr = sr;

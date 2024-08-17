@@ -11,6 +11,8 @@ OBJECTS := $(BUILD_DIR)/main.o
 OBJECTS += $(BUILD_DIR)/binary.o
 OBJECTS += $(BUILD_DIR)/print.o
 OBJECTS += $(BUILD_DIR)/simulate.o
+OBJECTS += $(BUILD_DIR)/register_rm.o
+
 
 CXXFLAGS += -O0 -g
 #CXXFLAGS += -O2
@@ -30,6 +32,9 @@ $(BUILD_DIR)/print.o: src/print.cpp include/print.h include/types.h
 
 $(BUILD_DIR)/simulate.o: src/simulate.cpp include/simulate.h include/types.h include/register_rm.h
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/simulate.cpp -o $(BUILD_DIR)/simulate.o
+
+$(BUILD_DIR)/register_rm.o: src/register_rm.cpp include/register_rm.h
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c src/register_rm.cpp -o $(BUILD_DIR)/register_rm.o
 
 .PHONY: clean
 clean: 

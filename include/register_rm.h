@@ -122,4 +122,7 @@ get_register_name (byte reg, bool wide)
   return REGISTER_NAMES[reg];
 }
 
+void
+fill_operand_by_mod (byte mod, byte rm, bool w, byte **cursor, operand *operand);
+
 #endif
