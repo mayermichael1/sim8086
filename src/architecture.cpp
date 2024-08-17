@@ -2,6 +2,83 @@
 
 #include <stdio.h>
 
+const char* REGISTER_NAMES[] = 
+{
+  "al",
+  "cl",
+  "dl",
+  "bl",
+  "ah",
+  "ch",
+  "dh",
+  "bh"
+};
+
+const word REGISTER_OFFSET[] =
+{
+  0,
+  4,
+  6,
+  2,
+  1,
+  5,
+  7,
+  3
+};
+
+const char* REGISTER_NAMES_WIDE[] = 
+{
+  "ax",
+  "cx",
+  "dx",
+  "bx",
+  "sp",
+  "bp",
+  "si",
+  "di"
+};
+
+const word REGISTER_OFFSET_WIDE[] = 
+{
+  0,
+  4,
+  6,
+  2,
+  8,
+  10,
+  12,
+  14
+};
+
+const char* RM_FIELD_NAMES[] = 
+{
+  "bx + si",
+  "bx + di",
+  "bp + si",
+  "bp + di",
+  "si",
+  "di",
+  "bp",
+  "bx",
+};
+
+const char* SEGMENT_REGISTER_NAMES[] = 
+{
+  "ES",
+  "CS",
+  "SS",
+  "DS",
+};
+
+const word SEGMENT_REGISTER_OFFSET[] =
+{
+  22, // ES
+  16, // CS
+  20, // SS
+  18, // DS
+};
+
+
 void
 fill_operand_by_mod (byte mod, byte rm, bool w, byte **cursor, operand *operand)
 {
