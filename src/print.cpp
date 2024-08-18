@@ -47,7 +47,7 @@ print_operand (operand op)
 }
 
 void 
-print_mov (operand destination, operand source)
+print_operation (const char* operation, operand destination, operand source)
 {
 
   if (destination.type == OP_IMMEDIATE)
@@ -56,7 +56,7 @@ print_mov (operand destination, operand source)
       return;
     }
 
-  printf("mov ");
+  printf("%s ", operation);
 
   print_operand(destination);
 

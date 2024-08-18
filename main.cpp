@@ -81,12 +81,12 @@ main (int argc, char** argv)
           
           if (d)
             {
-              print_mov(reg_operand, rm_operand);
+              print_operation("MOV",reg_operand, rm_operand);
               simulate_mov(registers,reg_operand, rm_operand);
             }
           else
             {
-              print_mov(rm_operand, reg_operand);
+              print_operation("MOV",rm_operand, reg_operand);
               simulate_mov(registers,rm_operand, reg_operand);
             }
         }
@@ -105,7 +105,7 @@ main (int argc, char** argv)
           addr.type = OP_ADDRESS;
           addr.address = memory;
 
-          print_mov(reg, addr);
+          print_operation("MOV",reg, addr);
           simulate_mov(registers,reg, addr);
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
@@ -123,7 +123,7 @@ main (int argc, char** argv)
           addr.type = OP_ADDRESS;
           addr.address = memory;
 
-          print_mov(addr, reg);
+          print_operation("MOV",addr, reg);
           simulate_mov(registers,addr, reg);
         }
       else if ((ubyte)mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
@@ -152,7 +152,7 @@ main (int argc, char** argv)
           immediate.type = OP_IMMEDIATE;
           immediate.value = immediate_value;
 
-          print_mov(reg_operand, immediate);
+          print_operation("MOV",reg_operand, immediate);
           simulate_mov(registers,reg_operand, immediate);
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
@@ -183,7 +183,7 @@ main (int argc, char** argv)
               immediate.value = read_byte(&cursor);
             }
 
-          print_mov(destination, immediate);
+          print_operation("MOV",destination, immediate);
           simulate_mov(registers,destination, immediate);
 
         }
@@ -202,7 +202,7 @@ main (int argc, char** argv)
           destination.type = OP_SEGMENT;
           destination.sr = sr;
 
-          print_mov(destination, source);
+          print_operation("MOV",destination, source);
           simulate_mov(registers, destination, source);
         }
       else if ((ubyte)first_byte == MOV_SEGMENT_TO_REG_OR_MEM)
@@ -220,8 +220,242 @@ main (int argc, char** argv)
           source.type = OP_SEGMENT;
           source.sr = sr;
 
-          print_mov(destination, source);
+          print_operation("MOV",destination, source);
           simulate_mov(registers, destination, source);
+        }
+      else if ( 
+        (ubyte)mask(first_byte, 0b11111100) == ADD_REG_OR_MEM_PLUS_REG_TO_EITHER
+              )
+        {
+          byte second_byte = read_byte(&cursor);
+
+          byte d = mask(first_byte >> 1, 0b00000001);
+          byte w = mask(first_byte, 0b00000001);
+
+          byte mod  = mask(second_byte >> 6, 0b00000011);
+          byte reg =  mask(second_byte >> 3, 0b00000111);
+          byte rm =  mask(second_byte >> 0, 0b00000111);
+
+          operand rm_operand;
+          operand reg_operand;
+
+          reg_operand.type = OP_REGISTER;
+          reg_operand.reg = reg;
+          reg_operand.wide = w;
+
+          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+
+          operand destination, source;
+
+          if (d)
+            {
+              destination = reg_operand;
+              source = rm_operand;
+            }
+          else
+            {
+              source = reg_operand;
+              destination = rm_operand;
+            }
+          print_operation("ADD", destination, source);
+        }
+      else if (
+        (ubyte)mask(first_byte, 0b11111100) == ARITHMETIC_IMMEDIATE_TO_REG_OR_MEM
+              )
+        {
+          byte second_byte = read_byte(&cursor);
+
+          byte s = mask(first_byte >> 1, 0b00000001);
+          byte w = mask(first_byte >> 0, 0b00000001);
+          
+          byte mod =  mask(second_byte >> 6, 0b00000011);
+          byte type = mask(second_byte >> 3, 0b00000111);
+          byte rm =   mask(second_byte >> 0, 0b00000111);
+
+          operand rm_operand;
+          operand immediate;
+
+          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+          immediate.type = OP_IMMEDIATE;
+          if (w && !s)
+            {
+              immediate.value = read_word(&cursor);
+            }
+          else 
+            {
+              immediate.value = read_byte(&cursor);
+            }
+
+          switch (type)
+            {
+              case ARITHMETIC_ADD:
+                {
+                  print_operation("ADD", rm_operand, immediate);
+                  break;
+                }
+              case ARITHMETIC_SUB:
+                {
+                  print_operation("SUB", rm_operand, immediate);
+                  break;
+                }
+              case ARITHMETIC_CMP:
+                {
+                  print_operation("CMP", rm_operand, immediate);
+                  break;
+                }
+            }
+        }
+      else if (
+        (ubyte)mask(first_byte, 0b11111100) == ADD_IMMEDIATE_TO_ACCUMULATOR
+              )
+        {
+          //NOTE: somehow this does not fire
+          printf(";debug does this fire?\n");
+          byte w = mask(first_byte, 0b00000001);
+
+          operand immediate;
+          immediate.type = OP_IMMEDIATE;
+
+          operand accumulator;
+          accumulator.type = OP_REGISTER;
+          accumulator.reg = 0; accumulator.wide = w;
+
+          if (w)
+            {
+              immediate.value = read_word(&cursor);
+            }
+          else
+            {
+              immediate.value = read_byte(&cursor);
+            }
+
+          print_operation("ADD", accumulator, immediate);
+        }
+      else if (
+        (ubyte)mask(first_byte, 0b11111100) == SUB_REG_OR_MEM_SUB_REG_TO_EITHER
+              )
+        {
+          byte second_byte = read_byte(&cursor);
+
+          byte d = mask(first_byte >> 1, 0b00000001);
+          byte w = mask(first_byte, 0b00000001);
+
+          byte mod  = mask(second_byte >> 6, 0b00000011);
+          byte reg =  mask(second_byte >> 3, 0b00000111);
+          byte rm =  mask(second_byte >> 0, 0b00000111);
+
+          operand rm_operand;
+          operand reg_operand;
+
+          reg_operand.type = OP_REGISTER;
+          reg_operand.reg = reg;
+          reg_operand.wide = w;
+
+          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+
+          operand destination, source;
+
+          if (d)
+            {
+              destination = reg_operand;
+              source = rm_operand;
+            }
+          else
+            {
+              source = reg_operand;
+              destination = rm_operand;
+            }
+          print_operation("SUB", destination, source);
+
+        }
+      else if (
+        (ubyte)mask(first_byte, 0b11111100) == SUB_IMMEDIATE_FROM_ACCUMULATOR
+              )
+        {
+          //NOTE: somehow this does not fire
+          printf(";debug does this fire?\n");
+          byte w = mask(first_byte, 0b00000001);
+
+          operand immediate;
+          immediate.type = OP_IMMEDIATE;
+
+          operand accumulator;
+          accumulator.type = OP_REGISTER;
+          accumulator.reg = 0;
+          accumulator.wide = w;
+
+          if (w)
+            {
+              immediate.value = read_word(&cursor);
+            }
+          else
+            {
+              immediate.value = read_byte(&cursor);
+            }
+
+          print_operation("SUB", accumulator, immediate);
+
+        }
+      else if ((ubyte)mask(first_byte, 0b11111100) == CMP_REG_OR_MEM_AND_REG)
+        {
+          byte second_byte = read_byte(&cursor);
+
+          byte d = mask(first_byte >> 1, 0b00000001);
+          byte w = mask(first_byte, 0b00000001);
+
+          byte mod  = mask(second_byte >> 6, 0b00000011);
+          byte reg =  mask(second_byte >> 3, 0b00000111);
+          byte rm =  mask(second_byte >> 0, 0b00000111);
+
+          operand rm_operand;
+          operand reg_operand;
+
+          reg_operand.type = OP_REGISTER;
+          reg_operand.reg = reg;
+          reg_operand.wide = w;
+
+          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+
+          operand destination, source;
+
+          if (d)
+            {
+              destination = reg_operand;
+              source = rm_operand;
+            }
+          else
+            {
+              source = reg_operand;
+              destination = rm_operand;
+            }
+          print_operation("CMP", destination, source);
+        }
+      else if (
+        (ubyte)mask(first_byte, 0b11111100) == CMP_IMMEDIATE_WITH_ACCUMULATOR
+              )
+        {
+          //NOTE: somehow this does not fire
+          printf(";debug does this fire?\n");
+          byte w = mask(first_byte, 0b00000001);
+
+          operand immediate;
+          immediate.type = OP_IMMEDIATE;
+
+          operand accumulator;
+          accumulator.type = OP_REGISTER;
+          accumulator.reg = 0;
+          accumulator.wide = w;
+
+          if (w)
+            {
+              immediate.value = read_word(&cursor);
+            }
+          else
+            {
+              immediate.value = read_byte(&cursor);
+            }
+
+          print_operation("CMP", accumulator, immediate);
         }
       else
         {
