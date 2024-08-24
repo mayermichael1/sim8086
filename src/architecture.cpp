@@ -78,6 +78,7 @@ const word SEGMENT_REGISTER_OFFSET[] =
   18, // DS
 };
 
+const word FLAG_OFFSET = 26;
 
 void
 fill_operand_by_mod (byte mod, byte rm, bool w, byte **cursor, operand *operand)

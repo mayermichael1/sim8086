@@ -12,7 +12,7 @@
 #define MiB (KiB * KiB)
 #define GiB (KiB * KiB)
 
-byte registers[12*2] = {0};
+byte registers[14*2] = {0};
 byte memory[MiB] = {0};
 
 int 
@@ -453,8 +453,10 @@ main (int argc, char** argv)
         {
           printf ("; NOT IMPLEMENTED %s\n",byte_to_binary_string(first_byte));
         }
+        print_registers(registers);
+        print_flags(registers);
+        printf("\n");
     }
-    print_registers(registers);
   return 0;
 }
 

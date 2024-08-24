@@ -13,4 +13,7 @@ print_operation (const char* operation, operand destination, operand source);
 void 
 print_registers (byte* registers);
 
+void 
+print_flags (byte* registers);
+
 #endif //PRINT_H

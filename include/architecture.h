@@ -11,6 +11,7 @@ extern const word REGISTER_OFFSET_WIDE[];
 extern const char* RM_FIELD_NAMES[];
 extern const char* SEGMENT_REGISTER_NAMES[];
 extern const word SEGMENT_REGISTER_OFFSET[];
+extern const word FLAG_OFFSET;
 
 enum OPERATION_CODES
 {
@@ -45,6 +46,13 @@ enum ARITHMETIC_TYPES
   ARITHMETIC_ADD = 0b000,
   ARITHMETIC_SUB = 0b101,
   ARITHMETIC_CMP = 0b111,
+};
+
+enum FLAG
+{
+  FLAG_SIGN = 0b0000000010000000,
+  FLAG_ZERO = 0b0000000001000000,
+  FLAG_COUNT,
 };
 
 inline const char*

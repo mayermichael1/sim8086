@@ -1,5 +1,33 @@
 #include "simulate.h"
 
+static void 
+set_flag (byte* registers, FLAG flag)
+{
+  word value = *(word*)(registers+FLAG_OFFSET);
+
+  value = value | flag;
+
+  byte high_byte = get_high_byte(value);
+  byte low_byte = get_low_byte(value);
+
+  registers[FLAG_OFFSET] = low_byte;
+  registers[FLAG_OFFSET+1] = high_byte;
+}
+
+static void 
+unset_flag (byte* registers, FLAG flag)
+{
+  word value = *(word*)(registers+FLAG_OFFSET);
+
+  value = value & ~flag;
+
+  byte high_byte = get_high_byte(value);
+  byte low_byte = get_low_byte(value);
+
+  registers[FLAG_OFFSET] = low_byte;
+  registers[FLAG_OFFSET+1] = high_byte;
+}
+
 void 
 simulate_mov(byte* registers, operand destination, operand source)
 {
@@ -43,11 +71,20 @@ simulate_arithmetic ( byte* registers,
 
   if (result < 0) 
     {
-      // sign flag here
+      set_flag(registers, FLAG_SIGN);
     }
+  else 
+    {
+      unset_flag(registers, FLAG_SIGN);
+    }
+
   if (result == 0)
     {
-      // zero flag here
+      set_flag(registers, FLAG_ZERO);
+    }
+  else 
+    {
+      unset_flag(registers, FLAG_ZERO);
     }
 
   if (destination.type == OP_REGISTER && type != ARITHMETIC_CMP)
@@ -55,3 +92,4 @@ simulate_arithmetic ( byte* registers,
       write_value_to_register(registers, destination, result);
     }
 }
+
