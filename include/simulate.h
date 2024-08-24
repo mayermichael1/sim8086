@@ -14,7 +14,7 @@ simulate_arithmetic ( byte* reigsters,
                       ARITHMETIC_TYPES type );
 
 inline word
-read_value_from_register (byte *registers, operand reg)
+read_value_from_operand (byte *registers, operand reg)
 {
   word value = 0;
   if (reg.type == OP_REGISTER)
@@ -34,6 +34,10 @@ read_value_from_register (byte *registers, operand reg)
     {
       byte offset = SEGMENT_REGISTER_OFFSET[reg.sr];
       value = *(word*)(registers+offset);
+    }
+  else if (reg.type == OP_IMMEDIATE)
+    {
+      return reg.value;
     }
   return value;
 }
