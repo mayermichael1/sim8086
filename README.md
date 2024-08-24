@@ -21,5 +21,7 @@ Currently supports:
 - [x] MOV immediate to memory
 - [x] refactor code
 - [x] notion of where a register actually is
+- [x] segment registers are missing
+- [x] read_value_from_register can be replaced by a read_value_from_operand
 - [ ] restructure the way instructions are read in
-- [ ] segment registers are missing
+- [ ] make a architecture structure right now memory and registers are seperate
