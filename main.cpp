@@ -34,22 +34,6 @@ main (int argc, char** argv)
   fread(&memory, sizeof(byte), MiB, fp);
   fclose(fp);
 
-#if 0
-  operand a, b;
-  a.type = OP_REGISTER;
-  a.wide = true;
-  a.reg = 0;
-
-  b.type = OP_IMMEDIATE;
-  b.value = 257;
-
-  simulate_mov(registers,a, b);
-  print_registers(registers);
-  printf("ax: %i", read_value_from_register(registers, a));
-#endif
-
-
-#if 1
   printf("bits 16\n"); // compatibility with source
 
   byte *cursor = memory;
@@ -258,6 +242,7 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("ADD", destination, source);
+          simulate_arithmetic(registers, destination, source, ARITHMETIC_ADD);
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == ARITHMETIC_IMMEDIATE_TO_REG_OR_MEM
@@ -269,7 +254,8 @@ main (int argc, char** argv)
           byte w = mask(first_byte >> 0, 0b00000001);
           
           byte mod =  mask(second_byte >> 6, 0b00000011);
-          byte type = mask(second_byte >> 3, 0b00000111);
+          ARITHMETIC_TYPES type = 
+            (ARITHMETIC_TYPES) mask(second_byte >> 3, 0b00000111);
           byte rm =   mask(second_byte >> 0, 0b00000111);
 
           operand rm_operand;
@@ -304,6 +290,7 @@ main (int argc, char** argv)
                   break;
                 }
             }
+          simulate_arithmetic(registers, rm_operand, immediate, type);
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == ADD_IMMEDIATE_TO_ACCUMULATOR
@@ -330,6 +317,7 @@ main (int argc, char** argv)
             }
 
           print_operation("ADD", accumulator, immediate);
+          simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_ADD);
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == SUB_REG_OR_MEM_SUB_REG_TO_EITHER
@@ -366,6 +354,7 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("SUB", destination, source);
+          simulate_arithmetic(registers, destination, source, ARITHMETIC_SUB);
 
         }
       else if (
@@ -394,6 +383,7 @@ main (int argc, char** argv)
             }
 
           print_operation("SUB", accumulator, immediate);
+          simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_SUB);
 
         }
       else if ((ubyte)mask(first_byte, 0b11111100) == CMP_REG_OR_MEM_AND_REG)
@@ -429,6 +419,7 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("CMP", destination, source);
+          simulate_arithmetic(registers, destination, source, ARITHMETIC_CMP);
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == CMP_IMMEDIATE_WITH_ACCUMULATOR
@@ -456,13 +447,13 @@ main (int argc, char** argv)
             }
 
           print_operation("CMP", accumulator, immediate);
+          simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_CMP);
         }
       else
         {
           printf ("; NOT IMPLEMENTED %s\n",byte_to_binary_string(first_byte));
         }
     }
-#endif
     print_registers(registers);
   return 0;
 }

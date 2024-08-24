@@ -7,6 +7,12 @@
 void 
 simulate_mov(byte *registers, operand destination, operand source);
 
+void 
+simulate_arithmetic ( byte* reigsters, 
+                      operand destination,
+                      operand source, 
+                      ARITHMETIC_TYPES type );
+
 inline word
 read_value_from_register (byte *registers, operand reg)
 {

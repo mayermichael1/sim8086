@@ -17,3 +17,54 @@ simulate_mov(byte* registers, operand destination, operand source)
         }
     }
 }
+
+void 
+simulate_arithmetic ( byte* registers, 
+                      operand destination,
+                      operand source, 
+                      ARITHMETIC_TYPES type )
+{
+  word value1 = read_value_from_register(registers, destination);;
+  word value2 = read_value_from_register(registers, source);
+
+  word result = 0;
+
+  //TODO: read_value_from_operand instead of read_value_from_register
+  if (source.type == OP_IMMEDIATE)
+    {
+      value2 = source.value;
+    }
+
+  switch (type)
+    {
+      case ARITHMETIC_ADD:
+        {
+          result = value1 + value2;
+          break;
+        }
+      case ARITHMETIC_SUB:
+        {
+          result = value1 - value2;
+          break;
+        }
+      case ARITHMETIC_CMP:
+        {
+          result = value1 - value2;
+          break;
+        }
+    }
+
+  if (result < 0) 
+    {
+      // sign flag here
+    }
+  if (result == 0)
+    {
+      // zero flag here
+    }
+
+  if (destination.type == OP_REGISTER && type != ARITHMETIC_CMP)
+    {
+      write_value_to_register(registers, destination, result);
+    }
+}
