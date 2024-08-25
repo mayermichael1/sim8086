@@ -15,6 +15,31 @@
 byte registers[14*2] = {0};
 byte memory[MiB] = {0};
 
+byte 
+read_ip (byte *registers)
+{
+  word* ip_address = (word*)(registers+IP_OFFSET);
+  return *ip_address;
+}
+
+byte 
+read_byte_using_ip (byte* base_ip, byte* registers)
+{
+  word* ip_address = (word*)(registers+IP_OFFSET);
+  byte byte_at_ip = *(base_ip+(*ip_address));
+  (*ip_address)++;
+  return byte_at_ip;
+}
+
+word 
+read_word_using_ip (byte* base_ip, byte* registers)
+{
+  word* ip_address = (word*)(registers+IP_OFFSET);
+  word word_at_ip = *(word*)(base_ip+(*ip_address));
+  (*ip_address)+=2;
+  return word_at_ip;
+}
+
 int 
 main (int argc, char** argv)
 {
@@ -31,21 +56,21 @@ main (int argc, char** argv)
       return 1;
     }
 
-  fread(&memory, sizeof(byte), MiB, fp);
+  int instruction_bytes = fread(&memory, sizeof(byte), MiB, fp);
   fclose(fp);
 
   printf("bits 16\n"); // compatibility with source
 
   byte *cursor = memory;
   
-  while ((*cursor)) 
+  while (read_ip(registers) < instruction_bytes) 
     {
-      byte first_byte = read_byte(&cursor);
+      byte first_byte = read_byte_using_ip(memory, registers);
 
       // check operations
       if ((ubyte)mask(first_byte, 0b11111100) == MOV_ADR_TO_ADR)
         {
-          byte second_byte = read_byte(&cursor);
+          byte second_byte = read_byte_using_ip(memory, registers);
 
           byte d =   mask((first_byte >> 1), 0b00000001);
           byte w =   mask((first_byte >> 0), 0b00000001);
@@ -118,12 +143,12 @@ main (int argc, char** argv)
           int immediate_value = 0;;
           if (w == 1)
             {
-              word immediate_value_word = read_word(&cursor);
+              word immediate_value_word = read_word_using_ip(memory, registers);
               immediate_value = immediate_value_word;
             }
           else
             {
-              byte immediate_value_byte = read_byte(&cursor);
+              byte immediate_value_byte = read_byte_using_ip(memory, registers);
               immediate_value = immediate_value_byte;
             }
 
@@ -143,7 +168,7 @@ main (int argc, char** argv)
         {
           byte w = first_byte & 1;
 
-          byte second_byte = read_byte(&cursor);
+          byte second_byte = read_byte_using_ip(memory, registers);
 
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte rm = mask (second_byte, 0b00000111);
@@ -160,11 +185,11 @@ main (int argc, char** argv)
           
           if (immediate.wide)
             {
-              immediate.value = read_word(&cursor);
+              immediate.value = read_word_using_ip(memory, registers);
             }
           else 
             {
-              immediate.value = read_byte(&cursor);
+              immediate.value = read_byte_using_ip(memory, registers);
             }
 
           print_operation("MOV",destination, immediate);
@@ -173,7 +198,7 @@ main (int argc, char** argv)
         }
       else if ((ubyte)first_byte == MOV_REG_OR_MEM_TO_SEGMENT)
         {
-          byte second_byte = read_byte(&cursor);
+          byte second_byte = read_byte_using_ip(memory, registers);
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte sr = mask((second_byte >> 3), 0b00000011);
           byte rm = mask(second_byte, 0b00000111); 
@@ -191,7 +216,7 @@ main (int argc, char** argv)
         }
       else if ((ubyte)first_byte == MOV_SEGMENT_TO_REG_OR_MEM)
         {    
-          byte second_byte = read_byte(&cursor);
+          byte second_byte = read_byte_using_ip(memory, registers);
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte sr = mask((second_byte >> 3), 0b00000011);
           byte rm = mask(second_byte, 0b00000111); 
@@ -211,7 +236,7 @@ main (int argc, char** argv)
         (ubyte)mask(first_byte, 0b11111100) == ADD_REG_OR_MEM_PLUS_REG_TO_EITHER
               )
         {
-          byte second_byte = read_byte(&cursor);
+          byte second_byte = read_byte_using_ip(memory, registers);
 
           byte d = mask(first_byte >> 1, 0b00000001);
           byte w = mask(first_byte, 0b00000001);
@@ -248,7 +273,7 @@ main (int argc, char** argv)
         (ubyte)mask(first_byte, 0b11111100) == ARITHMETIC_IMMEDIATE_TO_REG_OR_MEM
               )
         {
-          byte second_byte = read_byte(&cursor);
+          byte second_byte = read_byte_using_ip(memory, registers);
 
           byte s = mask(first_byte >> 1, 0b00000001);
           byte w = mask(first_byte >> 0, 0b00000001);
@@ -265,11 +290,11 @@ main (int argc, char** argv)
           immediate.type = OP_IMMEDIATE;
           if (w && !s)
             {
-              immediate.value = read_word(&cursor);
+              immediate.value = read_word_using_ip(memory, registers);
             }
           else 
             {
-              immediate.value = read_byte(&cursor);
+              immediate.value = read_byte_using_ip(memory, registers);
             }
 
           switch (type)
@@ -309,11 +334,11 @@ main (int argc, char** argv)
 
           if (w)
             {
-              immediate.value = read_word(&cursor);
+              immediate.value = read_word_using_ip(memory, registers);
             }
           else
             {
-              immediate.value = read_byte(&cursor);
+              immediate.value = read_byte_using_ip(memory, registers);
             }
 
           print_operation("ADD", accumulator, immediate);
@@ -323,7 +348,7 @@ main (int argc, char** argv)
         (ubyte)mask(first_byte, 0b11111100) == SUB_REG_OR_MEM_SUB_REG_TO_EITHER
               )
         {
-          byte second_byte = read_byte(&cursor);
+          byte second_byte = read_byte_using_ip(memory, registers);
 
           byte d = mask(first_byte >> 1, 0b00000001);
           byte w = mask(first_byte, 0b00000001);
@@ -375,11 +400,11 @@ main (int argc, char** argv)
 
           if (w)
             {
-              immediate.value = read_word(&cursor);
+              immediate.value = read_word_using_ip(memory, registers);
             }
           else
             {
-              immediate.value = read_byte(&cursor);
+              immediate.value = read_byte_using_ip(memory, registers);
             }
 
           print_operation("SUB", accumulator, immediate);
@@ -388,7 +413,7 @@ main (int argc, char** argv)
         }
       else if ((ubyte)mask(first_byte, 0b11111100) == CMP_REG_OR_MEM_AND_REG)
         {
-          byte second_byte = read_byte(&cursor);
+          byte second_byte = read_byte_using_ip(memory, registers);
 
           byte d = mask(first_byte >> 1, 0b00000001);
           byte w = mask(first_byte, 0b00000001);
@@ -439,11 +464,11 @@ main (int argc, char** argv)
 
           if (w)
             {
-              immediate.value = read_word(&cursor);
+              immediate.value = read_word_using_ip(memory, registers);
             }
           else
             {
-              immediate.value = read_byte(&cursor);
+              immediate.value = read_byte_using_ip(memory, registers);
             }
 
           print_operation("CMP", accumulator, immediate);

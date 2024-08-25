@@ -12,6 +12,7 @@ extern const char* RM_FIELD_NAMES[];
 extern const char* SEGMENT_REGISTER_NAMES[];
 extern const word SEGMENT_REGISTER_OFFSET[];
 extern const word FLAG_OFFSET;
+extern const word IP_OFFSET;
 
 enum OPERATION_CODES
 {
