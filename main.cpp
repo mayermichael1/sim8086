@@ -526,6 +526,10 @@ main (int argc, char** argv)
           instruction_offset.instruction_offset = offset;
 
           print_operation("JZ", instruction_offset, {});
+          if (simulate)
+            {
+              simulate_jump(registers, true, instruction_offset);
+            }
         }
       else if ((ubyte)first_byte == JNE_OR_JNZ)
         {
@@ -535,6 +539,10 @@ main (int argc, char** argv)
           instruction_offset.instruction_offset = offset;
 
           print_operation("JNZ", instruction_offset, {});
+          if (simulate)
+            {
+              simulate_jump(registers, false, instruction_offset);
+            }
         }
       else
         {

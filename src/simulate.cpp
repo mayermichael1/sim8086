@@ -14,6 +14,15 @@ set_flag (byte* registers, FLAG flag)
   registers[FLAG_OFFSET+1] = high_byte;
 }
 
+static bool
+read_flag (byte* registers, FLAG flag)
+{
+  word value = *(word*)(registers+FLAG_OFFSET);
+
+  bool flag_set = value & flag;
+  return flag_set;
+}
+
 static void 
 unset_flag (byte* registers, FLAG flag)
 {
@@ -91,5 +100,28 @@ simulate_arithmetic ( byte* registers,
     {
       write_value_to_register(registers, destination, result);
     }
+}
+
+
+void 
+simulate_jump ( byte* registers,
+                bool jump_if_zero,
+                operand instruction_offset )
+{
+  word ip = read_ip(registers);
+
+  bool zero_flag = read_flag(registers, FLAG_ZERO);
+
+  if (!jump_if_zero)
+    {
+      zero_flag = !zero_flag;
+    }
+
+  if (zero_flag)
+    {
+      ip += instruction_offset.instruction_offset;
+    }
+  registers[IP_OFFSET] = get_low_byte(ip);
+  registers[IP_OFFSET+1] = get_high_byte(ip);
 }
 

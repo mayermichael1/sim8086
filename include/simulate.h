@@ -13,6 +13,11 @@ simulate_arithmetic ( byte* reigsters,
                       operand source, 
                       ARITHMETIC_TYPES type );
 
+void 
+simulate_jump ( byte* registers,
+                bool jump_if_zero,
+                operand instruction_offset );
+
 inline word
 read_value_from_operand (byte *registers, operand reg)
 {
