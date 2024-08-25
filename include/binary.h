@@ -2,6 +2,7 @@
 #define BINARY_H
 
 #include "types.h"
+#include "architecture.h"
 
 char* 
 byte_to_binary_string(byte input);
@@ -49,6 +50,31 @@ get_high_byte (word value)
   word shift = value >> 8;
   word masked = shift & 0b11111111;
   return masked;
+}
+
+inline byte 
+read_ip (byte *registers)
+{
+  word* ip_address = (word*)(registers+IP_OFFSET);
+  return *ip_address;
+}
+
+inline byte 
+read_byte_using_ip (byte* base_ip, byte* registers)
+{
+  word* ip_address = (word*)(registers+IP_OFFSET);
+  byte byte_at_ip = *(base_ip+(*ip_address));
+  (*ip_address)++;
+  return byte_at_ip;
+}
+
+inline word 
+read_word_using_ip (byte* base_ip, byte* registers)
+{
+  word* ip_address = (word*)(registers+IP_OFFSET);
+  word word_at_ip = *(word*)(base_ip+(*ip_address));
+  (*ip_address)+=2;
+  return word_at_ip;
 }
 
 #endif
