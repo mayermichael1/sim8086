@@ -43,9 +43,33 @@ read_word_using_ip (byte* base_ip, byte* registers)
 int 
 main (int argc, char** argv)
 {
-  if (argc != 2)
+  bool print_every_intruction = false;
+  bool print_at_end = true;
+  bool simulate = true;
+
+  if (argc < 2)
     {
       return 1;
+    }
+  
+  if (argc > 2)
+    {
+      for (int i = 2; i < argc; i++)
+        {
+          if (strcmp(argv[i], "-every") == 0)
+            {
+              print_every_intruction = true;
+            }
+          if (strcmp(argv[i], "-noprint") == 0)
+            {
+              print_every_intruction = false;
+              print_at_end = false;
+            }
+          if (strcmp(argv[i], "-nosim") == 0)
+            {
+              simulate = false;
+            }
+        }
     }
 
   char* filename = argv[1];
@@ -91,12 +115,18 @@ main (int argc, char** argv)
           if (d)
             {
               print_operation("MOV",reg_operand, rm_operand);
-              simulate_mov(registers,reg_operand, rm_operand);
+              if (simulate)
+                {
+                  simulate_mov(registers,reg_operand, rm_operand);
+                }
             }
           else
             {
               print_operation("MOV",rm_operand, reg_operand);
-              simulate_mov(registers,rm_operand, reg_operand);
+              if (simulate)
+                {
+                  simulate_mov(registers,rm_operand, reg_operand);
+                }
             }
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
@@ -115,7 +145,10 @@ main (int argc, char** argv)
           addr.address = memory;
 
           print_operation("MOV",reg, addr);
-          simulate_mov(registers,reg, addr);
+          if (simulate)
+            {
+              simulate_mov(registers,reg, addr);
+            }
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
@@ -133,7 +166,10 @@ main (int argc, char** argv)
           addr.address = memory;
 
           print_operation("MOV",addr, reg);
-          simulate_mov(registers,addr, reg);
+          if (simulate)
+            {
+              simulate_mov(registers,addr, reg);
+            }
         }
       else if ((ubyte)mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
         {
@@ -162,7 +198,10 @@ main (int argc, char** argv)
           immediate.value = immediate_value;
 
           print_operation("MOV",reg_operand, immediate);
-          simulate_mov(registers,reg_operand, immediate);
+          if (simulate)
+            {
+              simulate_mov(registers,reg_operand, immediate);
+            }
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
         {
@@ -193,7 +232,10 @@ main (int argc, char** argv)
             }
 
           print_operation("MOV",destination, immediate);
-          simulate_mov(registers,destination, immediate);
+          if (simulate)
+            {
+              simulate_mov(registers,destination, immediate);
+            }
 
         }
       else if ((ubyte)first_byte == MOV_REG_OR_MEM_TO_SEGMENT)
@@ -212,7 +254,10 @@ main (int argc, char** argv)
           destination.sr = sr;
 
           print_operation("MOV",destination, source);
-          simulate_mov(registers, destination, source);
+          if (simulate)
+            {
+              simulate_mov(registers, destination, source);
+            }
         }
       else if ((ubyte)first_byte == MOV_SEGMENT_TO_REG_OR_MEM)
         {    
@@ -230,7 +275,10 @@ main (int argc, char** argv)
           source.sr = sr;
 
           print_operation("MOV",destination, source);
-          simulate_mov(registers, destination, source);
+          if (simulate)
+            {
+              simulate_mov(registers, destination, source);
+            }
         }
       else if ( 
         (ubyte)mask(first_byte, 0b11111100) == ADD_REG_OR_MEM_PLUS_REG_TO_EITHER
@@ -267,7 +315,10 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("ADD", destination, source);
-          simulate_arithmetic(registers, destination, source, ARITHMETIC_ADD);
+          if (simulate)
+            {
+              simulate_arithmetic(registers, destination, source, ARITHMETIC_ADD);
+            }
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == ARITHMETIC_IMMEDIATE_TO_REG_OR_MEM
@@ -315,7 +366,10 @@ main (int argc, char** argv)
                   break;
                 }
             }
-          simulate_arithmetic(registers, rm_operand, immediate, type);
+          if (simulate)
+            {
+              simulate_arithmetic(registers, rm_operand, immediate, type);
+            }
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == ADD_IMMEDIATE_TO_ACCUMULATOR
@@ -342,7 +396,10 @@ main (int argc, char** argv)
             }
 
           print_operation("ADD", accumulator, immediate);
-          simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_ADD);
+          if (simulate)
+            {
+              simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_ADD);
+            }
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == SUB_REG_OR_MEM_SUB_REG_TO_EITHER
@@ -379,7 +436,10 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("SUB", destination, source);
-          simulate_arithmetic(registers, destination, source, ARITHMETIC_SUB);
+          if (simulate)
+            {
+              simulate_arithmetic(registers, destination, source, ARITHMETIC_SUB);
+            }
 
         }
       else if (
@@ -408,7 +468,10 @@ main (int argc, char** argv)
             }
 
           print_operation("SUB", accumulator, immediate);
-          simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_SUB);
+          if (simulate)
+            {
+              simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_SUB);
+            }
 
         }
       else if ((ubyte)mask(first_byte, 0b11111100) == CMP_REG_OR_MEM_AND_REG)
@@ -444,7 +507,10 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("CMP", destination, source);
-          simulate_arithmetic(registers, destination, source, ARITHMETIC_CMP);
+          if (simulate)
+            {
+              simulate_arithmetic(registers, destination, source, ARITHMETIC_CMP);
+            }
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == CMP_IMMEDIATE_WITH_ACCUMULATOR
@@ -472,15 +538,29 @@ main (int argc, char** argv)
             }
 
           print_operation("CMP", accumulator, immediate);
-          simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_CMP);
+          if (simulate)
+            {
+              simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_CMP);
+            }
         }
       else
         {
           printf ("; NOT IMPLEMENTED %s\n",byte_to_binary_string(first_byte));
         }
-        print_registers(registers);
-        print_flags(registers);
-        printf("\n");
+
+      if (print_every_intruction)
+        {
+          print_registers(registers);
+          print_flags(registers);
+          printf("\n");
+        }
+    }
+
+  if (print_at_end)
+    {
+      print_registers(registers);
+      print_flags(registers);
+      printf("\n");
     }
   return 0;
 }
