@@ -518,6 +518,24 @@ main (int argc, char** argv)
               simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_CMP);
             }
         }
+      else if ((ubyte)first_byte == JE_OR_JZ)
+        {
+          byte offset = read_byte_using_ip(memory, registers);
+          operand instruction_offset;
+          instruction_offset.type = OP_INSTRUCTION_OFFSET;
+          instruction_offset.instruction_offset = offset;
+
+          print_operation("JZ", instruction_offset, {});
+        }
+      else if ((ubyte)first_byte == JNE_OR_JNZ)
+        {
+          byte offset = read_byte_using_ip(memory, registers);
+          operand instruction_offset;
+          instruction_offset.type = OP_INSTRUCTION_OFFSET;
+          instruction_offset.instruction_offset = offset;
+
+          print_operation("JNZ", instruction_offset, {});
+        }
       else
         {
           printf ("; NOT IMPLEMENTED %s\n",byte_to_binary_string(first_byte));

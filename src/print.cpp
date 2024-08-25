@@ -44,6 +44,17 @@ print_operand (operand op)
       const char* op_string = SEGMENT_REGISTER_NAMES[op.sr];
       printf("%s", op_string);
     }
+  else if (op.type == OP_INSTRUCTION_OFFSET)
+    {
+      char sign = '+';
+      int offset = op.instruction_offset;
+      if (op.instruction_offset < 0)
+        {
+          sign = '-';
+          offset *= -1;
+        }
+      printf("$%c%u", sign, offset);
+    }
 }
 
 void 
@@ -60,21 +71,24 @@ print_operation (const char* operation, operand destination, operand source)
 
   print_operand(destination);
 
-  printf(", ");
-
-  if (destination.type == OP_MEMORY_LOCATION && source.type == OP_IMMEDIATE)
+  if (destination.type != OP_NONE)
     {
-      if (source.wide)
-        {
-          printf("word ");
-        }
-      else
-        {
-          printf("byte ");
-        }
-    }
+      printf(", ");
 
-  print_operand(source);
+      if (destination.type == OP_MEMORY_LOCATION && source.type == OP_IMMEDIATE)
+        {
+          if (source.wide)
+            {
+              printf("word ");
+            }
+          else
+            {
+              printf("byte ");
+            }
+        }
+
+      print_operand(source);
+    }
 
   printf("\n");
 }

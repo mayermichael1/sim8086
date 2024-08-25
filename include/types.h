@@ -9,11 +9,13 @@ typedef unsigned short uword;
 
 enum operand_type
 {
+  OP_NONE,
   OP_IMMEDIATE,
   OP_REGISTER,
   OP_MEMORY_LOCATION,
   OP_ADDRESS,
   OP_SEGMENT,
+  OP_INSTRUCTION_OFFSET,
 };
 
 struct operand
@@ -26,6 +28,7 @@ struct operand
   word displacement;
   word address;
   byte sr;
+  byte instruction_offset;
 };
 
 #endif

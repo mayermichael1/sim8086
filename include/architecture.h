@@ -2,7 +2,6 @@
 #define ARCHITECTURE_H
 
 #include "types.h"
-#include "binary.h"
 
 extern const char* REGISTER_NAMES[];
 extern const word REGISTER_OFFSET[];
@@ -40,6 +39,9 @@ enum OPERATION_CODES
   CMP_IMMEDIATE_WITH_ACCUMULATOR = 0b00111100,
 
   ARITHMETIC_IMMEDIATE_TO_REG_OR_MEM = 0b10000000,
+
+  JE_OR_JZ = 0b01110100,
+  JNE_OR_JNZ = 0b01110101,
 };
 
 enum ARITHMETIC_TYPES
@@ -55,6 +57,9 @@ enum FLAG
   FLAG_ZERO = 0b0000000001000000,
   FLAG_COUNT,
 };
+
+
+#include "binary.h"
 
 inline const char*
 get_register_name (byte reg, bool wide)
