@@ -136,7 +136,6 @@ void
 print_flags (byte* registers)
 {
   word flag_register = *(registers+FLAG_OFFSET);
-  printf("%s\n", byte_to_binary_string(flag_register));
 
   bool zero_flag = flag_register & FLAG_ZERO;
   printf(";zero flag: %i\n", zero_flag);
