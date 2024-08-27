@@ -114,7 +114,7 @@ main (int argc, char** argv)
           reg.wide = w;
 
           operand addr = {};
-          addr.type = OP_ADDRESS;
+          addr.type = OP_MEMORY_LOCATION;
           addr.displacement = memory_address;
 
           print_operation("MOV",reg, addr);
@@ -135,7 +135,7 @@ main (int argc, char** argv)
           reg.wide = w;
 
           operand addr = {};
-          addr.type = OP_ADDRESS;
+          addr.type = OP_MEMORY_LOCATION;
           addr.displacement = memory_address;
 
           print_operation("MOV",addr, reg);

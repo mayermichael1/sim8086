@@ -169,7 +169,7 @@ fill_operand_by_mod ( byte *memory, byte *registers, byte mod, byte rm, bool w,
         {
           word address = read_word_using_ip(memory, registers);
           
-          operand->type = OP_ADDRESS;
+          operand->type = OP_MEMORY_LOCATION;
           operand->displacement = address;
         }
       else

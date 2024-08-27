@@ -17,31 +17,38 @@ print_operand (operand op)
     }
   else if (op.type == OP_MEMORY_LOCATION)
     {
-      char sign = '+';
-      printf ("[%s", get_register_name(op.base_register, true));
-      if (op.offset_register != 0)
+      printf("[");
+
+      if (op.base_register != 0)
         {
-          printf(" + %s", get_register_name(op.offset_register, true));
-        }
-      int displacement = op.displacement;
-      if (displacement != 0)
-        {
-          if (displacement < 0)
+          printf ("%s", get_register_name(op.base_register, true));
+          if (op.offset_register != 0)
             {
-              displacement *= -1;
-              sign = '-';
+              printf(" + %s", get_register_name(op.offset_register, true));
             }
-          printf(" %c %u", sign, displacement);
+
+          char sign = '+';
+          int displacement = op.displacement;
+          if (displacement != 0)
+            {
+              if (displacement < 0)
+                {
+                  displacement *= -1;
+                  sign = '-';
+                }
+              printf(" %c %u", sign, displacement);
+            }
         }
+      else  // direct address
+      {
+        printf("%u", op.displacement);
+      }
+
       printf("]");
     }
   else if (op.type == OP_IMMEDIATE)
     {
       printf("%i", op.value);
-    }
-  else if (op.type == OP_ADDRESS)
-    {
-      printf("[%u]", op.displacement);
     }
   else if (op.type == OP_SEGMENT)
     {
@@ -57,8 +64,7 @@ print_operand (operand op)
           sign = '-';
           offset *= -1;
         }
-      printf("$%c%u", sign, offset);
-    }
+      printf("$%c%u", sign, offset); }
 }
 
 void 
