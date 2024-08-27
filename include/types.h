@@ -22,13 +22,22 @@ struct operand
 {
   operand_type type;
   bool wide;
-  word value;
-  byte reg;
-  byte rm;
-  word displacement;
-  word address;
-  byte sr;
-  byte instruction_offset;
+  
+  union
+  {
+    byte reg;
+    byte sr;
+    byte base_register;
+  };
+  
+  byte offset_register;
+
+  union
+  {
+    word value;
+    word displacement;
+    word instruction_offset;
+  };
 };
 
 #endif

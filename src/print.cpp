@@ -18,7 +18,11 @@ print_operand (operand op)
   else if (op.type == OP_MEMORY_LOCATION)
     {
       char sign = '+';
-      printf ("[%s", RM_FIELD_NAMES[op.rm]);
+      printf ("[%s", get_register_name(op.base_register, true));
+      if (op.offset_register != 0)
+        {
+          printf(" + %s", get_register_name(op.offset_register, true));
+        }
       int displacement = op.displacement;
       if (displacement != 0)
         {
@@ -37,7 +41,7 @@ print_operand (operand op)
     }
   else if (op.type == OP_ADDRESS)
     {
-      printf("[%u]", op.address);
+      printf("[%u]", op.displacement);
     }
   else if (op.type == OP_SEGMENT)
     {

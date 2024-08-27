@@ -59,8 +59,6 @@ main (int argc, char** argv)
   fclose(fp);
 
   printf("bits 16\n"); // compatibility with source
-
-  byte *cursor = memory;
   
   while (read_ip(registers) < instruction_bytes) 
     {
@@ -85,7 +83,7 @@ main (int argc, char** argv)
 
           operand rm_operand = {};
 
-          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
           
           if (d)
             {
@@ -106,7 +104,7 @@ main (int argc, char** argv)
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
         {
-          uword memory = read_uword(&cursor);
+          word memory_address = read_word_using_ip(memory, registers);
 
           byte w = first_byte & 1;
 
@@ -117,7 +115,7 @@ main (int argc, char** argv)
 
           operand addr = {};
           addr.type = OP_ADDRESS;
-          addr.address = memory;
+          addr.displacement = memory_address;
 
           print_operation("MOV",reg, addr);
           if (simulate)
@@ -127,7 +125,7 @@ main (int argc, char** argv)
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
-          uword memory = read_uword(&cursor);
+          word memory_address = read_word_using_ip(memory, registers);
 
           byte w = first_byte & 1;
 
@@ -138,7 +136,7 @@ main (int argc, char** argv)
 
           operand addr = {};
           addr.type = OP_ADDRESS;
-          addr.address = memory;
+          addr.displacement = memory_address;
 
           print_operation("MOV",addr, reg);
           if (simulate)
@@ -193,9 +191,9 @@ main (int argc, char** argv)
 
           operand destination = {};
           destination.type = OP_MEMORY_LOCATION;
-          destination.rm = rm;
+          destination.base_register = rm;
 
-          fill_operand_by_mod(mod, rm, w, &cursor, &destination);
+          fill_operand_by_mod(memory, registers, mod, rm, w, &destination);
           
           if (immediate.wide)
             {
@@ -223,7 +221,7 @@ main (int argc, char** argv)
           operand destination;
           operand source;
 
-          fill_operand_by_mod(mod, rm, true, &cursor, &source);
+          fill_operand_by_mod(memory, registers, mod, rm, true, &source);
 
           destination.type = OP_SEGMENT;
           destination.sr = sr;
@@ -244,7 +242,7 @@ main (int argc, char** argv)
           operand destination;
           operand source;
           
-          fill_operand_by_mod(mod, rm, true, &cursor, &destination);
+          fill_operand_by_mod(memory, registers, mod, rm, true, &destination);
 
           source.type = OP_SEGMENT;
           source.sr = sr;
@@ -275,7 +273,7 @@ main (int argc, char** argv)
           reg_operand.reg = reg;
           reg_operand.wide = w;
 
-          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
 
           operand destination, source;
 
@@ -312,7 +310,7 @@ main (int argc, char** argv)
           operand rm_operand;
           operand immediate;
 
-          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
           immediate.type = OP_IMMEDIATE;
           if (w && !s)
             {
@@ -396,7 +394,7 @@ main (int argc, char** argv)
           reg_operand.reg = reg;
           reg_operand.wide = w;
 
-          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
 
           operand destination, source;
 
@@ -467,7 +465,7 @@ main (int argc, char** argv)
           reg_operand.reg = reg;
           reg_operand.wide = w;
 
-          fill_operand_by_mod(mod, rm, w, &cursor, &rm_operand);
+          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
 
           operand destination, source;
 

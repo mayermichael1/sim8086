@@ -7,7 +7,6 @@ extern const char* REGISTER_NAMES[];
 extern const word REGISTER_OFFSET[];
 extern const char* REGISTER_NAMES_WIDE[];
 extern const word REGISTER_OFFSET_WIDE[];
-extern const char* RM_FIELD_NAMES[];
 extern const char* SEGMENT_REGISTER_NAMES[];
 extern const word SEGMENT_REGISTER_OFFSET[];
 extern const word FLAG_OFFSET;
@@ -72,7 +71,10 @@ get_register_name (byte reg, bool wide)
   return REGISTER_NAMES[reg];
 }
 
+byte
+get_register_by_name (const char *name);
+
 void
-fill_operand_by_mod (byte mod, byte rm, bool w, byte **cursor, operand *operand);
+fill_operand_by_mod (byte *memory, byte *registers, byte mod, byte rm, bool w, operand *operand);
 
 #endif
