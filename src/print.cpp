@@ -4,6 +4,7 @@
 
 #include "architecture.h"
 #include "simulate.h"
+#include "binary.h"
 
 void 
 print_operand (operand op)

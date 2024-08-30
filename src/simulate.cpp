@@ -1,4 +1,5 @@
 #include "simulate.h"
+#include "binary.h"
 
 static void 
 set_flag (byte* registers, FLAG flag)
@@ -38,7 +39,7 @@ unset_flag (byte* registers, FLAG flag)
 }
 
 word 
-read_value_from_operand (byte *registers, operand reg)
+read_value_from_operand (cpu_architecture *cpu, operand reg)
 {
   word value = 0;
   if (reg.type == OP_REGISTER)
@@ -46,18 +47,18 @@ read_value_from_operand (byte *registers, operand reg)
       if (reg.wide)
         {
           byte offset = REGISTER_OFFSET_WIDE[reg.reg];
-          value = *(word*)(registers+offset);
+          value = *(word*)(cpu->registers+offset);
         }
       else
         {
           byte offset = REGISTER_OFFSET[reg.reg];
-          value = *(registers+offset);
+          value = *(cpu->registers+offset);
         }
     }
   else if (reg.type == OP_SEGMENT)
     {
       byte offset = SEGMENT_REGISTER_OFFSET[reg.sr];
-      value = *(word*)(registers+offset);
+      value = *(word*)(cpu->registers+offset);
     }
   else if (reg.type == OP_IMMEDIATE)
     {
@@ -68,7 +69,7 @@ read_value_from_operand (byte *registers, operand reg)
 }
 
 void 
-write_value_to_operand (byte* registers, operand reg, word value)
+write_value_to_operand (cpu_architecture *cpu, operand reg, word value)
 {
   if (reg.type == OP_REGISTER)
     {
@@ -80,10 +81,10 @@ write_value_to_operand (byte* registers, operand reg, word value)
       if (reg.wide)
         {
           offset = REGISTER_OFFSET_WIDE[reg.reg];
-          registers[offset+1] = highValue;
+          cpu->registers[offset+1] = highValue;
         }
 
-      registers[offset] = lowValue;
+      cpu->registers[offset] = lowValue;
     }
   else if (reg.type == OP_SEGMENT)
     {
@@ -92,30 +93,30 @@ write_value_to_operand (byte* registers, operand reg, word value)
       byte lowValue = get_low_byte(value);
       byte highValue = get_high_byte(value);
 
-      registers[offset+1] = highValue;
-      registers[offset] = lowValue;
+      cpu->registers[offset+1] = highValue;
+      cpu->registers[offset] = lowValue;
     }
 }
 
 void 
-simulate_mov(byte* registers, operand destination, operand source)
+simulate_mov(cpu_architecture *cpu ,operand destination, operand source)
 {
 
   if (destination.type == OP_REGISTER || destination.type == OP_SEGMENT)
     {
-      word value = read_value_from_operand(registers, source);
-      write_value_to_operand(registers, destination, value);
+      word value = read_value_from_operand(cpu, source);
+      write_value_to_operand(cpu, destination, value);
     }
 }
 
 void 
-simulate_arithmetic ( byte* registers, 
+simulate_arithmetic ( cpu_architecture *cpu, 
                       operand destination,
                       operand source, 
                       ARITHMETIC_TYPES type )
 {
-  word value1 = read_value_from_operand(registers, destination);;
-  word value2 = read_value_from_operand(registers, source);
+  word value1 = read_value_from_operand(cpu, destination);;
+  word value2 = read_value_from_operand(cpu, source);
 
   word result = 0;
 
@@ -140,37 +141,37 @@ simulate_arithmetic ( byte* registers,
 
   if (result < 0) 
     {
-      set_flag(registers, FLAG_SIGN);
+      set_flag(cpu->registers, FLAG_SIGN);
     }
   else 
     {
-      unset_flag(registers, FLAG_SIGN);
+      unset_flag(cpu->registers, FLAG_SIGN);
     }
 
   if (result == 0)
     {
-      set_flag(registers, FLAG_ZERO);
+      set_flag(cpu->registers, FLAG_ZERO);
     }
   else 
     {
-      unset_flag(registers, FLAG_ZERO);
+      unset_flag(cpu->registers, FLAG_ZERO);
     }
 
   if (destination.type == OP_REGISTER && type != ARITHMETIC_CMP)
     {
-      write_value_to_operand(registers, destination, result);
+      write_value_to_operand(cpu, destination, result);
     }
 }
 
 
 void 
-simulate_jump ( byte* registers,
+simulate_jump ( cpu_architecture *cpu,
                 bool jump_if_zero,
                 operand instruction_offset )
 {
-  word ip = read_ip(registers);
+  word ip = read_ip(cpu);
 
-  bool zero_flag = read_flag(registers, FLAG_ZERO);
+  bool zero_flag = read_flag(cpu->registers, FLAG_ZERO);
 
   if (!jump_if_zero)
     {
@@ -181,7 +182,7 @@ simulate_jump ( byte* registers,
     {
       ip += instruction_offset.instruction_offset;
     }
-  registers[IP_OFFSET] = get_low_byte(ip);
-  registers[IP_OFFSET+1] = get_high_byte(ip);
+  cpu->registers[IP_OFFSET] = get_low_byte(ip);
+  cpu->registers[IP_OFFSET+1] = get_high_byte(ip);
 }
 

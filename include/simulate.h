@@ -5,23 +5,23 @@
 #include "architecture.h"
 
 void 
-simulate_mov(byte *registers, operand destination, operand source);
+simulate_mov(cpu_architecture *cpu, operand destination, operand source);
 
 void 
-simulate_arithmetic ( byte* reigsters, 
+simulate_arithmetic ( cpu_architecture *cpu, 
                       operand destination,
                       operand source, 
                       ARITHMETIC_TYPES type );
 
 void 
-simulate_jump ( byte* registers,
+simulate_jump ( cpu_architecture *cpu,
                 bool jump_if_zero,
                 operand instruction_offset );
 
 word
-read_value_from_operand (byte *registers, operand reg);
+read_value_from_operand (cpu_architecture *cpu, operand reg);
 
 void 
-write_value_to_operand (byte *registers, operand reg, word value);
+write_value_to_operand (cpu_architecture *cpu, operand reg, word value);
 
 #endif

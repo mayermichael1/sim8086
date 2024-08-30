@@ -53,26 +53,26 @@ get_high_byte (word value)
 }
 
 inline byte 
-read_ip (byte *registers)
+read_ip (cpu_architecture *cpu)
 {
-  word* ip_address = (word*)(registers+IP_OFFSET);
+  word* ip_address = (word*)(cpu->registers+IP_OFFSET);
   return *ip_address;
 }
 
 inline byte 
-read_byte_using_ip (byte* base_ip, byte* registers)
+read_byte_using_ip (cpu_architecture *cpu)
 {
-  word* ip_address = (word*)(registers+IP_OFFSET);
-  byte byte_at_ip = *(base_ip+(*ip_address));
+  word* ip_address = (word*)(cpu->registers+IP_OFFSET);
+  byte byte_at_ip = *(cpu->memory+(*ip_address));
   (*ip_address)++;
   return byte_at_ip;
 }
 
 inline word 
-read_word_using_ip (byte* base_ip, byte* registers)
+read_word_using_ip (cpu_architecture *cpu)
 {
-  word* ip_address = (word*)(registers+IP_OFFSET);
-  word word_at_ip = *(word*)(base_ip+(*ip_address));
+  word* ip_address = (word*)(cpu->registers+IP_OFFSET);
+  word word_at_ip = *(word*)(cpu->memory+(*ip_address));
   (*ip_address)+=2;
   return word_at_ip;
 }

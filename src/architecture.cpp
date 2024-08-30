@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include <string.h>
+#include "binary.h"
 
 const char* REGISTER_NAMES[] = 
 {
@@ -154,7 +155,7 @@ convert_rm_field_to_mem_location (operand* operand, byte rm)
 }
 
 void
-fill_operand_by_mod ( byte *memory, byte *registers, byte mod, byte rm, bool w,
+fill_operand_by_mod ( cpu_architecture *cpu, byte mod, byte rm, bool w,
   operand *operand )
 {
   if (mod == MOV_MOD_REG_TO_REG) // register to register move
@@ -167,7 +168,7 @@ fill_operand_by_mod ( byte *memory, byte *registers, byte mod, byte rm, bool w,
     {
       if (rm == 0b110) // special case direct address
         {
-          word address = read_word_using_ip(memory, registers);
+          word address = read_word_using_ip(cpu);
           
           operand->type = OP_MEMORY_LOCATION;
           operand->displacement = address;
@@ -181,7 +182,7 @@ fill_operand_by_mod ( byte *memory, byte *registers, byte mod, byte rm, bool w,
     }
   else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
     {
-      byte displacement = read_byte_using_ip(memory, registers);
+      byte displacement = read_byte_using_ip(cpu);
       operand->type = OP_MEMORY_LOCATION;
       convert_rm_field_to_mem_location(operand, rm);
       operand->wide = false;
@@ -189,7 +190,7 @@ fill_operand_by_mod ( byte *memory, byte *registers, byte mod, byte rm, bool w,
     }
   else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
     {
-      word displacement = read_word_using_ip(memory, registers);
+      word displacement = read_word_using_ip(cpu);
       operand->type = OP_MEMORY_LOCATION;
       convert_rm_field_to_mem_location(operand, rm);
       operand->wide = false;

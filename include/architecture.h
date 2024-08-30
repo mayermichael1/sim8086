@@ -57,9 +57,6 @@ enum FLAG
   FLAG_COUNT,
 };
 
-
-#include "binary.h"
-
 inline const char*
 get_register_name (byte reg, bool wide)
 {
@@ -71,10 +68,16 @@ get_register_name (byte reg, bool wide)
   return REGISTER_NAMES[reg];
 }
 
+struct cpu_architecture
+{
+  byte registers[14*2] = {0};
+  byte memory[MiB] = {0};
+};
+
 byte
 get_register_by_name (const char *name);
 
 void
-fill_operand_by_mod (byte *memory, byte *registers, byte mod, byte rm, bool w, operand *operand);
+fill_operand_by_mod (cpu_architecture *cpu, byte mod, byte rm, bool w, operand *operand);
 
 #endif

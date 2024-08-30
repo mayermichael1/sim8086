@@ -8,8 +8,7 @@
 #include "print.h"
 #include "simulate.h"
 
-byte registers[14*2] = {0};
-byte memory[MiB] = {0};
+cpu_architecture cpu;
 
 int 
 main (int argc, char** argv)
@@ -51,19 +50,19 @@ main (int argc, char** argv)
       return 1;
     }
 
-  int instruction_bytes = fread(&memory, sizeof(byte), MiB, fp);
+  int instruction_bytes = fread(&cpu.memory, sizeof(byte), MiB, fp);
   fclose(fp);
 
   printf("bits 16\n"); // compatibility with source
   
-  while (read_ip(registers) < instruction_bytes) 
+  while (read_ip(&cpu) < instruction_bytes) 
     {
-      byte first_byte = read_byte_using_ip(memory, registers);
+      byte first_byte = read_byte_using_ip(&cpu);
 
       // check operations
       if ((ubyte)mask(first_byte, 0b11111100) == MOV_ADR_TO_ADR)
         {
-          byte second_byte = read_byte_using_ip(memory, registers);
+          byte second_byte = read_byte_using_ip(&cpu);
 
           byte d =   mask((first_byte >> 1), 0b00000001);
           byte w =   mask((first_byte >> 0), 0b00000001);
@@ -79,14 +78,14 @@ main (int argc, char** argv)
 
           operand rm_operand = {};
 
-          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
+          fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
           
           if (d)
             {
               print_operation("MOV",reg_operand, rm_operand);
               if (simulate)
                 {
-                  simulate_mov(registers,reg_operand, rm_operand);
+                  simulate_mov(&cpu,reg_operand, rm_operand);
                 }
             }
           else
@@ -94,13 +93,13 @@ main (int argc, char** argv)
               print_operation("MOV",rm_operand, reg_operand);
               if (simulate)
                 {
-                  simulate_mov(registers,rm_operand, reg_operand);
+                  simulate_mov(&cpu,rm_operand, reg_operand);
                 }
             }
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_MEM_TO_ACCUMULATOR)
         {
-          word memory_address = read_word_using_ip(memory, registers);
+          word memory_address = read_word_using_ip(&cpu);
 
           byte w = first_byte & 1;
 
@@ -116,12 +115,12 @@ main (int argc, char** argv)
           print_operation("MOV",reg, addr);
           if (simulate)
             {
-              simulate_mov(registers,reg, addr);
+              simulate_mov(&cpu,reg, addr);
             }
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_ACCUMULATOR_TO_MEM)
         {
-          word memory_address = read_word_using_ip(memory, registers);
+          word memory_address = read_word_using_ip(&cpu);
 
           byte w = first_byte & 1;
 
@@ -137,7 +136,7 @@ main (int argc, char** argv)
           print_operation("MOV",addr, reg);
           if (simulate)
             {
-              simulate_mov(registers,addr, reg);
+              simulate_mov(&cpu,addr, reg);
             }
         }
       else if ((ubyte)mask(first_byte, 0b11110000) == MOV_IMMEDIATE_TO_REGISTER)
@@ -148,12 +147,12 @@ main (int argc, char** argv)
           int immediate_value = 0;;
           if (w == 1)
             {
-              word immediate_value_word = read_word_using_ip(memory, registers);
+              word immediate_value_word = read_word_using_ip(&cpu);
               immediate_value = immediate_value_word;
             }
           else
             {
-              byte immediate_value_byte = read_byte_using_ip(memory, registers);
+              byte immediate_value_byte = read_byte_using_ip(&cpu);
               immediate_value = immediate_value_byte;
             }
 
@@ -169,14 +168,14 @@ main (int argc, char** argv)
           print_operation("MOV",reg_operand, immediate);
           if (simulate)
             {
-              simulate_mov(registers,reg_operand, immediate);
+              simulate_mov(&cpu,reg_operand, immediate);
             }
         }
       else if ((ubyte)mask(first_byte, 0b11111110) == MOV_IMMEDIATE_TO_MEM_OR_REG)
         {
           byte w = first_byte & 1;
 
-          byte second_byte = read_byte_using_ip(memory, registers);
+          byte second_byte = read_byte_using_ip(&cpu);
 
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte rm = mask (second_byte, 0b00000111);
@@ -189,27 +188,27 @@ main (int argc, char** argv)
           destination.type = OP_MEMORY_LOCATION;
           destination.base_register = rm;
 
-          fill_operand_by_mod(memory, registers, mod, rm, w, &destination);
+          fill_operand_by_mod(&cpu , mod, rm, w, &destination);
           
           if (immediate.wide)
             {
-              immediate.value = read_word_using_ip(memory, registers);
+              immediate.value = read_word_using_ip(&cpu);
             }
           else 
             {
-              immediate.value = read_byte_using_ip(memory, registers);
+              immediate.value = read_byte_using_ip(&cpu);
             }
 
           print_operation("MOV",destination, immediate);
           if (simulate)
             {
-              simulate_mov(registers,destination, immediate);
+              simulate_mov(&cpu,destination, immediate);
             }
 
         }
       else if ((ubyte)first_byte == MOV_REG_OR_MEM_TO_SEGMENT)
         {
-          byte second_byte = read_byte_using_ip(memory, registers);
+          byte second_byte = read_byte_using_ip(&cpu);
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte sr = mask((second_byte >> 3), 0b00000011);
           byte rm = mask(second_byte, 0b00000111); 
@@ -217,7 +216,7 @@ main (int argc, char** argv)
           operand destination;
           operand source;
 
-          fill_operand_by_mod(memory, registers, mod, rm, true, &source);
+          fill_operand_by_mod(&cpu , mod, rm, true, &source);
 
           destination.type = OP_SEGMENT;
           destination.sr = sr;
@@ -225,12 +224,12 @@ main (int argc, char** argv)
           print_operation("MOV",destination, source);
           if (simulate)
             {
-              simulate_mov(registers, destination, source);
+              simulate_mov(&cpu, destination, source);
             }
         }
       else if ((ubyte)first_byte == MOV_SEGMENT_TO_REG_OR_MEM)
         {    
-          byte second_byte = read_byte_using_ip(memory, registers);
+          byte second_byte = read_byte_using_ip(&cpu);
           byte mod = mask ((second_byte >> 6), 0b00000011);
           byte sr = mask((second_byte >> 3), 0b00000011);
           byte rm = mask(second_byte, 0b00000111); 
@@ -238,7 +237,7 @@ main (int argc, char** argv)
           operand destination;
           operand source;
           
-          fill_operand_by_mod(memory, registers, mod, rm, true, &destination);
+          fill_operand_by_mod(&cpu, mod, rm, true, &destination);
 
           source.type = OP_SEGMENT;
           source.sr = sr;
@@ -246,14 +245,14 @@ main (int argc, char** argv)
           print_operation("MOV",destination, source);
           if (simulate)
             {
-              simulate_mov(registers, destination, source);
+              simulate_mov(&cpu, destination, source);
             }
         }
       else if ( 
         (ubyte)mask(first_byte, 0b11111100) == ADD_REG_OR_MEM_PLUS_REG_TO_EITHER
               )
         {
-          byte second_byte = read_byte_using_ip(memory, registers);
+          byte second_byte = read_byte_using_ip(&cpu);
 
           byte d = mask(first_byte >> 1, 0b00000001);
           byte w = mask(first_byte, 0b00000001);
@@ -269,7 +268,7 @@ main (int argc, char** argv)
           reg_operand.reg = reg;
           reg_operand.wide = w;
 
-          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
+          fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
 
           operand destination, source;
 
@@ -286,14 +285,14 @@ main (int argc, char** argv)
           print_operation("ADD", destination, source);
           if (simulate)
             {
-              simulate_arithmetic(registers, destination, source, ARITHMETIC_ADD);
+              simulate_arithmetic(&cpu, destination, source, ARITHMETIC_ADD);
             }
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == ARITHMETIC_IMMEDIATE_TO_REG_OR_MEM
               )
         {
-          byte second_byte = read_byte_using_ip(memory, registers);
+          byte second_byte = read_byte_using_ip(&cpu);
 
           byte s = mask(first_byte >> 1, 0b00000001);
           byte w = mask(first_byte >> 0, 0b00000001);
@@ -306,15 +305,15 @@ main (int argc, char** argv)
           operand rm_operand;
           operand immediate;
 
-          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
+          fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
           immediate.type = OP_IMMEDIATE;
           if (w && !s)
             {
-              immediate.value = read_word_using_ip(memory, registers);
+              immediate.value = read_word_using_ip(&cpu);
             }
           else 
             {
-              immediate.value = read_byte_using_ip(memory, registers);
+              immediate.value = read_byte_using_ip(&cpu);
             }
 
           switch (type)
@@ -337,7 +336,7 @@ main (int argc, char** argv)
             }
           if (simulate)
             {
-              simulate_arithmetic(registers, rm_operand, immediate, type);
+              simulate_arithmetic(&cpu, rm_operand, immediate, type);
             }
         }
       else if (
@@ -357,24 +356,24 @@ main (int argc, char** argv)
 
           if (w)
             {
-              immediate.value = read_word_using_ip(memory, registers);
+              immediate.value = read_word_using_ip(&cpu);
             }
           else
             {
-              immediate.value = read_byte_using_ip(memory, registers);
+              immediate.value = read_byte_using_ip(&cpu);
             }
 
           print_operation("ADD", accumulator, immediate);
           if (simulate)
             {
-              simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_ADD);
+              simulate_arithmetic(&cpu, accumulator, immediate, ARITHMETIC_ADD);
             }
         }
       else if (
         (ubyte)mask(first_byte, 0b11111100) == SUB_REG_OR_MEM_SUB_REG_TO_EITHER
               )
         {
-          byte second_byte = read_byte_using_ip(memory, registers);
+          byte second_byte = read_byte_using_ip(&cpu);
 
           byte d = mask(first_byte >> 1, 0b00000001);
           byte w = mask(first_byte, 0b00000001);
@@ -390,7 +389,7 @@ main (int argc, char** argv)
           reg_operand.reg = reg;
           reg_operand.wide = w;
 
-          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
+          fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
 
           operand destination, source;
 
@@ -407,7 +406,7 @@ main (int argc, char** argv)
           print_operation("SUB", destination, source);
           if (simulate)
             {
-              simulate_arithmetic(registers, destination, source, ARITHMETIC_SUB);
+              simulate_arithmetic(&cpu, destination, source, ARITHMETIC_SUB);
             }
 
         }
@@ -429,23 +428,23 @@ main (int argc, char** argv)
 
           if (w)
             {
-              immediate.value = read_word_using_ip(memory, registers);
+              immediate.value = read_word_using_ip(&cpu);
             }
           else
             {
-              immediate.value = read_byte_using_ip(memory, registers);
+              immediate.value = read_byte_using_ip(&cpu);
             }
 
           print_operation("SUB", accumulator, immediate);
           if (simulate)
             {
-              simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_SUB);
+              simulate_arithmetic(&cpu, accumulator, immediate, ARITHMETIC_SUB);
             }
 
         }
       else if ((ubyte)mask(first_byte, 0b11111100) == CMP_REG_OR_MEM_AND_REG)
         {
-          byte second_byte = read_byte_using_ip(memory, registers);
+          byte second_byte = read_byte_using_ip(&cpu);
 
           byte d = mask(first_byte >> 1, 0b00000001);
           byte w = mask(first_byte, 0b00000001);
@@ -461,7 +460,7 @@ main (int argc, char** argv)
           reg_operand.reg = reg;
           reg_operand.wide = w;
 
-          fill_operand_by_mod(memory, registers, mod, rm, w, &rm_operand);
+          fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
 
           operand destination, source;
 
@@ -478,7 +477,7 @@ main (int argc, char** argv)
           print_operation("CMP", destination, source);
           if (simulate)
             {
-              simulate_arithmetic(registers, destination, source, ARITHMETIC_CMP);
+              simulate_arithmetic(&cpu, destination, source, ARITHMETIC_CMP);
             }
         }
       else if (
@@ -499,22 +498,22 @@ main (int argc, char** argv)
 
           if (w)
             {
-              immediate.value = read_word_using_ip(memory, registers);
+              immediate.value = read_word_using_ip(&cpu);
             }
           else
             {
-              immediate.value = read_byte_using_ip(memory, registers);
+              immediate.value = read_byte_using_ip(&cpu);
             }
 
           print_operation("CMP", accumulator, immediate);
           if (simulate)
             {
-              simulate_arithmetic(registers, accumulator, immediate, ARITHMETIC_CMP);
+              simulate_arithmetic(&cpu, accumulator, immediate, ARITHMETIC_CMP);
             }
         }
       else if ((ubyte)first_byte == JE_OR_JZ)
         {
-          byte offset = read_byte_using_ip(memory, registers);
+          byte offset = read_byte_using_ip(&cpu);
           operand instruction_offset;
           instruction_offset.type = OP_INSTRUCTION_OFFSET;
           instruction_offset.instruction_offset = offset;
@@ -522,12 +521,12 @@ main (int argc, char** argv)
           print_operation("JZ", instruction_offset, {});
           if (simulate)
             {
-              simulate_jump(registers, true, instruction_offset);
+              simulate_jump(&cpu, true, instruction_offset);
             }
         }
       else if ((ubyte)first_byte == JNE_OR_JNZ)
         {
-          byte offset = read_byte_using_ip(memory, registers);
+          byte offset = read_byte_using_ip(&cpu);
           operand instruction_offset;
           instruction_offset.type = OP_INSTRUCTION_OFFSET;
           instruction_offset.instruction_offset = offset;
@@ -535,7 +534,7 @@ main (int argc, char** argv)
           print_operation("JNZ", instruction_offset, {});
           if (simulate)
             {
-              simulate_jump(registers, false, instruction_offset);
+              simulate_jump(&cpu, false, instruction_offset);
             }
         }
       else
@@ -545,16 +544,16 @@ main (int argc, char** argv)
 
       if (print_every_intruction)
         {
-          print_registers(registers);
-          print_flags(registers);
+          print_registers(cpu.registers);
+          print_flags(cpu.registers);
           printf("\n");
         }
     }
 
   if (print_at_end)
     {
-      print_registers(registers);
-      print_flags(registers);
+      print_registers(cpu.registers);
+      print_flags(cpu.registers);
       printf("\n");
     }
   return 0;
