@@ -37,6 +37,66 @@ unset_flag (byte* registers, FLAG flag)
   registers[FLAG_OFFSET+1] = high_byte;
 }
 
+word 
+read_value_from_operand (byte *registers, operand reg)
+{
+  word value = 0;
+  if (reg.type == OP_REGISTER)
+    {
+      if (reg.wide)
+        {
+          byte offset = REGISTER_OFFSET_WIDE[reg.reg];
+          value = *(word*)(registers+offset);
+        }
+      else
+        {
+          byte offset = REGISTER_OFFSET[reg.reg];
+          value = *(registers+offset);
+        }
+    }
+  else if (reg.type == OP_SEGMENT)
+    {
+      byte offset = SEGMENT_REGISTER_OFFSET[reg.sr];
+      value = *(word*)(registers+offset);
+    }
+  else if (reg.type == OP_IMMEDIATE)
+    {
+      return reg.value;
+    }
+  return value;
+
+}
+
+void 
+write_value_to_operand (byte* registers, operand reg, word value)
+{
+  if (reg.type == OP_REGISTER)
+    {
+      byte offset = REGISTER_OFFSET[reg.reg];
+
+      byte lowValue = get_low_byte(value);
+      byte highValue = get_high_byte(value);
+
+      if (reg.wide)
+        {
+          offset = REGISTER_OFFSET_WIDE[reg.reg];
+          registers[offset+1] = highValue;
+        }
+
+      registers[offset] = lowValue;
+    }
+  else if (reg.type == OP_SEGMENT)
+    {
+      byte offset = SEGMENT_REGISTER_OFFSET[reg.sr];
+
+      byte lowValue = get_low_byte(value);
+      byte highValue = get_high_byte(value);
+
+      registers[offset+1] = highValue;
+      registers[offset] = lowValue;
+    }
+}
+
 void 
 simulate_mov(byte* registers, operand destination, operand source)
 {
@@ -44,7 +104,7 @@ simulate_mov(byte* registers, operand destination, operand source)
   if (destination.type == OP_REGISTER || destination.type == OP_SEGMENT)
     {
       word value = read_value_from_operand(registers, source);
-      write_value_to_register(registers, destination, value);
+      write_value_to_operand(registers, destination, value);
     }
 }
 
@@ -98,7 +158,7 @@ simulate_arithmetic ( byte* registers,
 
   if (destination.type == OP_REGISTER && type != ARITHMETIC_CMP)
     {
-      write_value_to_register(registers, destination, result);
+      write_value_to_operand(registers, destination, result);
     }
 }
 
