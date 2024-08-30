@@ -39,4 +39,8 @@ struct operand
   };
 };
 
+#define KiB 1024
+#define MiB (KiB * KiB)
+#define GiB (KiB * KiB)
+
 #endif

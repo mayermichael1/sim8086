@@ -8,10 +8,6 @@
 #include "print.h"
 #include "simulate.h"
 
-#define KiB 1024
-#define MiB (KiB * KiB)
-#define GiB (KiB * KiB)
-
 byte registers[14*2] = {0};
 byte memory[MiB] = {0};
 
