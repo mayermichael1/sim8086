@@ -213,8 +213,8 @@ main (int argc, char** argv)
           byte sr = mask((second_byte >> 3), 0b00000011);
           byte rm = mask(second_byte, 0b00000111); 
 
-          operand destination;
-          operand source;
+          operand destination = {}; 
+          operand source = {};
 
           fill_operand_by_mod(&cpu , mod, rm, true, &source);
 
@@ -234,8 +234,8 @@ main (int argc, char** argv)
           byte sr = mask((second_byte >> 3), 0b00000011);
           byte rm = mask(second_byte, 0b00000111); 
 
-          operand destination;
-          operand source;
+          operand destination = {};
+          operand source = {};
           
           fill_operand_by_mod(&cpu, mod, rm, true, &destination);
 
@@ -261,8 +261,8 @@ main (int argc, char** argv)
           byte reg =  mask(second_byte >> 3, 0b00000111);
           byte rm =  mask(second_byte >> 0, 0b00000111);
 
-          operand rm_operand;
-          operand reg_operand;
+          operand rm_operand = {};
+          operand reg_operand = {};
 
           reg_operand.type = OP_REGISTER;
           reg_operand.reg = reg;
@@ -270,7 +270,8 @@ main (int argc, char** argv)
 
           fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
 
-          operand destination, source;
+          operand destination = {};
+          operand source = {};
 
           if (d)
             {
@@ -302,8 +303,8 @@ main (int argc, char** argv)
             (ARITHMETIC_TYPES) mask(second_byte >> 3, 0b00000111);
           byte rm =   mask(second_byte >> 0, 0b00000111);
 
-          operand rm_operand;
-          operand immediate;
+          operand rm_operand = {};
+          operand immediate = {};
 
           fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
           immediate.type = OP_IMMEDIATE;
@@ -347,10 +348,10 @@ main (int argc, char** argv)
           printf(";debug does this fire?\n");
           byte w = mask(first_byte, 0b00000001);
 
-          operand immediate;
+          operand immediate = {};
           immediate.type = OP_IMMEDIATE;
 
-          operand accumulator;
+          operand accumulator = {};
           accumulator.type = OP_REGISTER;
           accumulator.reg = 0; accumulator.wide = w;
 
@@ -382,8 +383,8 @@ main (int argc, char** argv)
           byte reg =  mask(second_byte >> 3, 0b00000111);
           byte rm =  mask(second_byte >> 0, 0b00000111);
 
-          operand rm_operand;
-          operand reg_operand;
+          operand rm_operand = {};
+          operand reg_operand = {};
 
           reg_operand.type = OP_REGISTER;
           reg_operand.reg = reg;
@@ -391,7 +392,8 @@ main (int argc, char** argv)
 
           fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
 
-          operand destination, source;
+          operand destination = {};
+          operand source = {};
 
           if (d)
             {
@@ -418,10 +420,10 @@ main (int argc, char** argv)
           printf(";debug does this fire?\n");
           byte w = mask(first_byte, 0b00000001);
 
-          operand immediate;
+          operand immediate = {};
           immediate.type = OP_IMMEDIATE;
 
-          operand accumulator;
+          operand accumulator = {};
           accumulator.type = OP_REGISTER;
           accumulator.reg = 0;
           accumulator.wide = w;
@@ -453,8 +455,8 @@ main (int argc, char** argv)
           byte reg =  mask(second_byte >> 3, 0b00000111);
           byte rm =  mask(second_byte >> 0, 0b00000111);
 
-          operand rm_operand;
-          operand reg_operand;
+          operand rm_operand = {};
+          operand reg_operand = {};
 
           reg_operand.type = OP_REGISTER;
           reg_operand.reg = reg;
@@ -462,7 +464,8 @@ main (int argc, char** argv)
 
           fill_operand_by_mod(&cpu, mod, rm, w, &rm_operand);
 
-          operand destination, source;
+          operand destination = {};
+          operand source = {};
 
           if (d)
             {
@@ -488,10 +491,10 @@ main (int argc, char** argv)
           printf(";debug does this fire?\n");
           byte w = mask(first_byte, 0b00000001);
 
-          operand immediate;
+          operand immediate = {};
           immediate.type = OP_IMMEDIATE;
 
-          operand accumulator;
+          operand accumulator = {};
           accumulator.type = OP_REGISTER;
           accumulator.reg = 0;
           accumulator.wide = w;
@@ -514,7 +517,7 @@ main (int argc, char** argv)
       else if ((ubyte)first_byte == JE_OR_JZ)
         {
           byte offset = read_byte_using_ip(&cpu);
-          operand instruction_offset;
+          operand instruction_offset = {};
           instruction_offset.type = OP_INSTRUCTION_OFFSET;
           instruction_offset.instruction_offset = offset;
 
@@ -527,7 +530,7 @@ main (int argc, char** argv)
       else if ((ubyte)first_byte == JNE_OR_JNZ)
         {
           byte offset = read_byte_using_ip(&cpu);
-          operand instruction_offset;
+          operand instruction_offset = {};
           instruction_offset.type = OP_INSTRUCTION_OFFSET;
           instruction_offset.instruction_offset = offset;
 
