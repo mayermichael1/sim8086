@@ -89,7 +89,14 @@ read_value_from_operand (cpu_architecture *cpu, operand reg)
   else if (reg.type == OP_MEMORY_LOCATION)
     {
       int real_address = calculate_real_address(cpu->registers, reg); 
-      value = *(word*)(cpu->memory+real_address);
+      if (reg.wide)
+        {
+          value = *(word*)(cpu->memory+real_address);
+        }
+      else
+        {
+          value = *(cpu->memory+real_address);
+        }
     }
   return value;
 
@@ -126,7 +133,11 @@ write_value_to_operand (cpu_architecture *cpu, operand reg, word value)
   else if (reg.type == OP_MEMORY_LOCATION)
     {
       int real_address = calculate_real_address(cpu->registers, reg);
-      cpu->memory[real_address] = value;
+      cpu->memory[real_address] = get_low_byte(value);
+      if (reg.wide)
+        {
+          cpu->memory[real_address+1] = get_high_byte(value);
+        }
     }
 }
 

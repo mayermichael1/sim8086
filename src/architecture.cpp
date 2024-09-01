@@ -158,11 +158,12 @@ void
 fill_operand_by_mod ( cpu_architecture *cpu, byte mod, byte rm, bool w,
   operand *operand )
 {
+  operand->wide = w;
+
   if (mod == MOV_MOD_REG_TO_REG) // register to register move
     {
       operand->type = OP_REGISTER;
       operand->reg = rm;
-      operand->wide = w;
     }
   else if (mod == MOV_MOD_MEM_MODE)
     {
@@ -178,7 +179,6 @@ fill_operand_by_mod ( cpu_architecture *cpu, byte mod, byte rm, bool w,
         {
           operand->type = OP_MEMORY_LOCATION;
           convert_rm_field_to_mem_location(operand, rm);
-          operand->wide = false;
         }
     }
   else if (mod == MOV_MOD_MEM_MODE_DISPLACE_1)
@@ -186,7 +186,6 @@ fill_operand_by_mod ( cpu_architecture *cpu, byte mod, byte rm, bool w,
       byte displacement = read_byte_using_ip(cpu);
       operand->type = OP_MEMORY_LOCATION;
       convert_rm_field_to_mem_location(operand, rm);
-      operand->wide = false;
       operand->displacement = displacement;
     }
   else if (mod == MOV_MOD_MEM_MODE_DISPLACE_2)
@@ -194,7 +193,6 @@ fill_operand_by_mod ( cpu_architecture *cpu, byte mod, byte rm, bool w,
       word displacement = read_word_using_ip(cpu);
       operand->type = OP_MEMORY_LOCATION;
       convert_rm_field_to_mem_location(operand, rm);
-      operand->wide = false;
       operand->displacement = displacement;
     }
   else
