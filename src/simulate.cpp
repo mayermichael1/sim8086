@@ -46,14 +46,10 @@ calculate_real_address (byte *registers, operand reg)
   byte base_offset_offset = REGISTER_OFFSET_WIDE[reg.base_register];
   word base_offset_value = *(word*)(registers+base_offset_offset);
 
-  byte offset_offset = REGISTER_OFFSET[reg.offset_register];
+  byte offset_offset = REGISTER_OFFSET_WIDE[reg.offset_register];
   word offset_offset_value = *(word*)(registers+offset_offset);
 
   real_address = base_offset_value;
-  if (reg.offset_register)
-    {
-      real_address <<= 4;
-    }
   real_address += offset_offset_value;
   real_address += reg.displacement;
 
