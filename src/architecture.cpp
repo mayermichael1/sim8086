@@ -172,6 +172,7 @@ fill_operand_by_mod ( cpu_architecture *cpu, byte mod, byte rm, bool w,
           
           operand->type = OP_MEMORY_LOCATION;
           operand->displacement = address;
+          operand->base_register = 0;
         }
       else
         {

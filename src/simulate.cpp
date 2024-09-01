@@ -38,6 +38,28 @@ unset_flag (byte* registers, FLAG flag)
   registers[FLAG_OFFSET+1] = high_byte;
 }
 
+inline static int
+calculate_real_address (byte *registers, operand reg)
+{
+  int real_address = 0;
+
+  byte base_offset_offset = REGISTER_OFFSET_WIDE[reg.base_register];
+  word base_offset_value = *(word*)(registers+base_offset_offset);
+
+  byte offset_offset = REGISTER_OFFSET[reg.offset_register];
+  word offset_offset_value = *(word*)(registers+offset_offset);
+
+  real_address = base_offset_value;
+  if (reg.offset_register)
+    {
+      real_address <<= 4;
+    }
+  real_address += offset_offset_value;
+  real_address += reg.displacement;
+
+  return real_address;
+}
+
 word 
 read_value_from_operand (cpu_architecture *cpu, operand reg)
 {
@@ -63,6 +85,11 @@ read_value_from_operand (cpu_architecture *cpu, operand reg)
   else if (reg.type == OP_IMMEDIATE)
     {
       return reg.value;
+    }
+  else if (reg.type == OP_MEMORY_LOCATION)
+    {
+      int real_address = calculate_real_address(cpu->registers, reg); 
+      value = *(word*)(cpu->memory+real_address);
     }
   return value;
 
@@ -96,13 +123,20 @@ write_value_to_operand (cpu_architecture *cpu, operand reg, word value)
       cpu->registers[offset+1] = highValue;
       cpu->registers[offset] = lowValue;
     }
+  else if (reg.type == OP_MEMORY_LOCATION)
+    {
+      int real_address = calculate_real_address(cpu->registers, reg);
+      cpu->memory[real_address] = value;
+    }
 }
 
 void 
 simulate_mov(cpu_architecture *cpu ,operand destination, operand source)
 {
 
-  if (destination.type == OP_REGISTER || destination.type == OP_SEGMENT)
+  if ( destination.type == OP_REGISTER || 
+       destination.type == OP_SEGMENT || 
+       destination.type == OP_MEMORY_LOCATION )
     {
       word value = read_value_from_operand(cpu, source);
       write_value_to_operand(cpu, destination, value);
