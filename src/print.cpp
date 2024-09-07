@@ -6,6 +6,241 @@
 #include "simulate.h"
 #include "binary.h"
 
+#include <string.h>
+
+unsigned int 
+calc_ea_cycles (operand operand)
+{
+  unsigned ea_calc_cycles = 0;
+  if (operand.displacement != 0 &&
+      operand.base_register == 0 &&
+      operand.offset_register == 0 )
+    {
+      ea_calc_cycles = 6;
+    }
+  else if ( operand.displacement == 0 &&
+            (operand.base_register != 0 || operand.offset_register != 0))
+    {
+      ea_calc_cycles = 5;
+    }
+  else if ( operand.displacement != 0 &&
+            (operand.base_register != 0 || operand.offset_register != 0))
+    {
+      ea_calc_cycles = 9;
+    }
+  else if ( operand.displacement == 0 &&
+            operand.base_register != 0 && operand.offset_register != 0 )
+    {
+      if (operand.base_register == get_register_by_name("bp") &&
+          operand.offset_register == get_register_by_name("di"))
+        {
+          ea_calc_cycles = 7;
+        }
+      else if (operand.base_register == get_register_by_name("bx") &&
+               operand.offset_register == get_register_by_name("si"))
+        {
+          ea_calc_cycles = 7;
+        }
+      if (operand.base_register == get_register_by_name("bp") &&
+          operand.offset_register == get_register_by_name("si"))
+        {
+          ea_calc_cycles = 8;
+        }
+      else if (operand.base_register == get_register_by_name("bx") &&
+               operand.offset_register == get_register_by_name("di"))
+        {
+          ea_calc_cycles = 8;
+        }
+    }
+  else if (operand.displacement != 0 &&
+           operand.base_register != 0 &&
+           operand.offset_register != 0) 
+  {
+      if (operand.base_register == get_register_by_name("bp") &&
+          operand.offset_register == get_register_by_name("di"))
+        {
+          ea_calc_cycles = 11;
+        }
+      else if (operand.base_register == get_register_by_name("bx") &&
+               operand.offset_register == get_register_by_name("si"))
+        {
+          ea_calc_cycles = 11;
+        }
+      if (operand.base_register == get_register_by_name("bp") &&
+          operand.offset_register == get_register_by_name("si"))
+        {
+          ea_calc_cycles = 12;
+        }
+      else if (operand.base_register == get_register_by_name("bx") &&
+               operand.offset_register == get_register_by_name("di"))
+        {
+          ea_calc_cycles = 12;
+        }
+  }
+
+  return ea_calc_cycles;
+}
+
+unsigned int 
+print_cycles (
+  byte *registers,
+  const char* operation,
+  operand destination,
+  operand source
+)
+{
+  unsigned int cycles = 0;
+  unsigned int ea_calc_cycles = 0;
+  if (strcmp(operation, "ADD") == 0 || strcmp(operation, "SUB") == 0)
+    {
+      if (destination.type == OP_REGISTER && source.type == OP_REGISTER)
+        {
+          cycles = 3;
+        }
+      else if (destination.type == OP_REGISTER && 
+               source.type == OP_MEMORY_LOCATION )
+        {
+          cycles = 9;
+          ea_calc_cycles = calc_ea_cycles(source);
+        }
+      else if (destination.type == OP_MEMORY_LOCATION &&
+               source.type == OP_REGISTER )
+        {
+          cycles = 16;
+          ea_calc_cycles = calc_ea_cycles(destination);
+        }
+      else if (destination.type == OP_REGISTER &&
+               source.type == OP_IMMEDIATE )
+        {
+          cycles = 4;
+        }
+      else if (destination.type == OP_MEMORY_LOCATION &&
+               source.type == OP_IMMEDIATE )
+        {
+          cycles = 17;
+          ea_calc_cycles = calc_ea_cycles(destination);
+        }
+    }
+  else if (strcmp(operation, "CMP") == 0)
+    {
+      if (destination.type == OP_REGISTER && source.type == OP_REGISTER)
+        {
+          cycles = 3;
+        }
+      else if (destination.type == OP_REGISTER && 
+               source.type == OP_MEMORY_LOCATION )
+        {
+          cycles = 9;
+          ea_calc_cycles = calc_ea_cycles(source);
+        }
+      else if (destination.type == OP_MEMORY_LOCATION &&
+               source.type == OP_REGISTER )
+        {
+          cycles = 9;
+          ea_calc_cycles = calc_ea_cycles(destination);
+        }
+      else if (destination.type == OP_REGISTER &&
+               source.type == OP_IMMEDIATE )
+        {
+          cycles = 4;
+        }
+      else if (destination.type == OP_MEMORY_LOCATION &&
+               source.type == OP_IMMEDIATE )
+        {
+          cycles = 10;
+          ea_calc_cycles = calc_ea_cycles(destination);
+        }
+    }
+  else if (strcmp(operation, "MOV") == 0)
+    {
+
+      if (destination.type == OP_REGISTER &&
+          source.type == OP_REGISTER )
+        {
+          cycles = 2;
+        }
+      else if (destination.type == OP_MEMORY_LOCATION &&
+               source.type == OP_REGISTER )
+        {
+          if (source.reg == 0)
+            {
+              cycles = 10;
+            }
+          else 
+            {
+              cycles = 9;
+              ea_calc_cycles = calc_ea_cycles(destination);
+            }
+        }
+      else if (destination.type == OP_REGISTER &&
+               source.type == OP_MEMORY_LOCATION )
+        {
+          if (destination.reg == 0)
+            {
+              cycles = 10;
+            }
+          else 
+            {
+              cycles = 8;
+              ea_calc_cycles = calc_ea_cycles (source);
+            }
+        }
+      else if (destination.type == OP_REGISTER && 
+               source.type == OP_IMMEDIATE )
+        {
+          cycles = 4; 
+        }
+      else if (destination.type == OP_MEMORY_LOCATION &&
+               source.type == OP_REGISTER )
+        {
+          cycles = 10;
+          ea_calc_cycles = calc_ea_cycles(destination);
+        }
+      else if (destination.type == OP_SEGMENT &&
+               source.type == OP_REGISTER )
+        {
+          cycles = 2;
+        }
+      else if (destination.type == OP_SEGMENT &&
+               source.type == OP_MEMORY_LOCATION )
+        {
+          cycles = 8;
+          ea_calc_cycles = calc_ea_cycles(source);
+        }
+      else if (destination.type == OP_REGISTER &&
+               source.type == OP_SEGMENT )
+        {
+          cycles = 2;
+        }
+      else if (destination.type == OP_MEMORY_LOCATION &&
+               source.type == OP_SEGMENT )
+        {
+          cycles = 9;
+          ea_calc_cycles = calc_ea_cycles(destination);
+        }
+    }
+  else if (strcmp(operation, "JZ") == 0)
+    {
+      cycles = 4;
+      if(read_flag(registers, FLAG_ZERO))
+        {
+          cycles = 16;
+        }
+    }
+  else if (strcmp(operation, "JNZ") == 0)
+    {
+      cycles = 4;
+      if(!read_flag(registers, FLAG_ZERO))
+        {
+          cycles = 16;
+        }
+    }
+
+  unsigned int sum = cycles + ea_calc_cycles;
+  printf("; cycles: %u + %u = %u \n", cycles, ea_calc_cycles, sum); 
+  return sum;
+}
+
 void 
 print_operand (operand op)
 {

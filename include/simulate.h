@@ -24,4 +24,7 @@ read_value_from_operand (cpu_architecture *cpu, operand reg);
 void 
 write_value_to_operand (cpu_architecture *cpu, operand reg, word value);
 
+bool
+read_flag (byte* registers, FLAG flag);
+
 #endif

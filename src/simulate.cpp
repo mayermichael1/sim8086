@@ -15,7 +15,7 @@ set_flag (byte* registers, FLAG flag)
   registers[FLAG_OFFSET+1] = high_byte;
 }
 
-static bool
+bool
 read_flag (byte* registers, FLAG flag)
 {
   word value = *(word*)(registers+FLAG_OFFSET);

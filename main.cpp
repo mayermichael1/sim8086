@@ -16,6 +16,8 @@ main (int argc, char** argv)
   bool print_every_intruction = false;
   bool print_at_end = true;
   bool simulate = true;
+  bool estimate_cycles = false;
+  unsigned int total_cycles = 0;
 
   if (argc < 2)
     {
@@ -38,6 +40,10 @@ main (int argc, char** argv)
           if (strcmp(argv[i], "-nosim") == 0)
             {
               simulate = false;
+            }
+          if (strcmp(argv[i], "-cycles") == 0)
+            {
+              estimate_cycles = true;
             }
         }
     }
@@ -83,6 +89,10 @@ main (int argc, char** argv)
           if (d)
             {
               print_operation("MOV",reg_operand, rm_operand);
+              if (estimate_cycles)
+                {
+                  total_cycles += print_cycles(cpu.registers, "MOV", reg_operand, rm_operand);
+                }
               if (simulate)
                 {
                   simulate_mov(&cpu,reg_operand, rm_operand);
@@ -91,6 +101,10 @@ main (int argc, char** argv)
           else
             {
               print_operation("MOV",rm_operand, reg_operand);
+              if (estimate_cycles)
+                {
+                  total_cycles += print_cycles(cpu.registers, "MOV", rm_operand, reg_operand);
+                }
               if (simulate)
                 {
                   simulate_mov(&cpu,rm_operand, reg_operand);
@@ -113,6 +127,10 @@ main (int argc, char** argv)
           addr.displacement = memory_address;
 
           print_operation("MOV",reg, addr);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "MOV", reg, addr);
+            }
           if (simulate)
             {
               simulate_mov(&cpu,reg, addr);
@@ -134,6 +152,10 @@ main (int argc, char** argv)
           addr.displacement = memory_address;
 
           print_operation("MOV",addr, reg);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "MOV", addr, reg);
+            }
           if (simulate)
             {
               simulate_mov(&cpu,addr, reg);
@@ -166,6 +188,10 @@ main (int argc, char** argv)
           immediate.value = immediate_value;
 
           print_operation("MOV",reg_operand, immediate);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "MOV", reg_operand, immediate);
+            }
           if (simulate)
             {
               simulate_mov(&cpu,reg_operand, immediate);
@@ -200,6 +226,10 @@ main (int argc, char** argv)
             }
 
           print_operation("MOV",destination, immediate);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "MOV", destination, immediate);
+            }
           if (simulate)
             {
               simulate_mov(&cpu,destination, immediate);
@@ -222,6 +252,10 @@ main (int argc, char** argv)
           destination.sr = sr;
 
           print_operation("MOV",destination, source);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "MOV", destination, source);
+            }
           if (simulate)
             {
               simulate_mov(&cpu, destination, source);
@@ -243,6 +277,10 @@ main (int argc, char** argv)
           source.sr = sr;
 
           print_operation("MOV",destination, source);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "MOV", destination, source);
+            }
           if (simulate)
             {
               simulate_mov(&cpu, destination, source);
@@ -284,6 +322,10 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("ADD", destination, source);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "ADD", destination, source);
+            }
           if (simulate)
             {
               simulate_arithmetic(&cpu, destination, source, ARITHMETIC_ADD);
@@ -322,16 +364,28 @@ main (int argc, char** argv)
               case ARITHMETIC_ADD:
                 {
                   print_operation("ADD", rm_operand, immediate);
+                  if (estimate_cycles)
+                    {
+                      total_cycles += print_cycles(cpu.registers, "ADD", rm_operand, immediate);
+                    }
                   break;
                 }
               case ARITHMETIC_SUB:
                 {
                   print_operation("SUB", rm_operand, immediate);
+                  if (estimate_cycles)
+                    {
+                      total_cycles += print_cycles(cpu.registers, "SUB", rm_operand, immediate);
+                    }
                   break;
                 }
               case ARITHMETIC_CMP:
                 {
                   print_operation("CMP", rm_operand, immediate);
+                  if (estimate_cycles)
+                    {
+                      total_cycles += print_cycles(cpu.registers, "CMP", rm_operand, immediate);
+                    }
                   break;
                 }
             }
@@ -365,6 +419,10 @@ main (int argc, char** argv)
             }
 
           print_operation("ADD", accumulator, immediate);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "ADD", accumulator, immediate);
+            }
           if (simulate)
             {
               simulate_arithmetic(&cpu, accumulator, immediate, ARITHMETIC_ADD);
@@ -406,6 +464,10 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("SUB", destination, source);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "SUB", destination, source);
+            }
           if (simulate)
             {
               simulate_arithmetic(&cpu, destination, source, ARITHMETIC_SUB);
@@ -438,6 +500,10 @@ main (int argc, char** argv)
             }
 
           print_operation("SUB", accumulator, immediate);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "SUB", accumulator, immediate);
+            }
           if (simulate)
             {
               simulate_arithmetic(&cpu, accumulator, immediate, ARITHMETIC_SUB);
@@ -478,6 +544,10 @@ main (int argc, char** argv)
               destination = rm_operand;
             }
           print_operation("CMP", destination, source);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "CMP", destination, source);
+            }
           if (simulate)
             {
               simulate_arithmetic(&cpu, destination, source, ARITHMETIC_CMP);
@@ -509,6 +579,10 @@ main (int argc, char** argv)
             }
 
           print_operation("CMP", accumulator, immediate);
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "CMP", accumulator, immediate);
+            }
           if (simulate)
             {
               simulate_arithmetic(&cpu, accumulator, immediate, ARITHMETIC_CMP);
@@ -522,6 +596,10 @@ main (int argc, char** argv)
           instruction_offset.instruction_offset = offset;
 
           print_operation("JZ", instruction_offset, {});
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "JZ", instruction_offset, {});
+            }
           if (simulate)
             {
               simulate_jump(&cpu, true, instruction_offset);
@@ -535,6 +613,10 @@ main (int argc, char** argv)
           instruction_offset.instruction_offset = offset;
 
           print_operation("JNZ", instruction_offset, {});
+          if (estimate_cycles)
+            {
+              total_cycles += print_cycles(cpu.registers, "JNZ", instruction_offset, {});
+            }
           if (simulate)
             {
               simulate_jump(&cpu, false, instruction_offset);
@@ -558,6 +640,11 @@ main (int argc, char** argv)
       print_registers(cpu.registers);
       print_flags(cpu.registers);
       printf("\n");
+    }
+
+  if (estimate_cycles)
+    {
+      printf("; total cycles = %u \n", total_cycles);
     }
   return 0;
 }

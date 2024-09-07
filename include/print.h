@@ -10,6 +10,9 @@ print_operand (operand op);
 void 
 print_operation (const char* operation, operand destination, operand source);
 
+unsigned int 
+print_cycles (byte* registers, const char* operation, operand destination, operand source);
+
 void 
 print_registers (byte* registers);
 
